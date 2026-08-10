@@ -934,7 +934,14 @@ end
 
 SendNotification("[SECURITY]", "Scanning Game...")
 
-Remotes()
+task.spawn(function()
+    local success, err = pcall(function()
+        Remotes()
+    end)
+    if not success then
+        warn("Remotes Error: " .. tostring(err))
+    end
+end)
 
 function FixInv()
 	for i,v in pairs(game.Players.LocalPlayer.Backpack:GetChildren()) do
