@@ -952,29 +952,26 @@ function FixInv()
 	end
 end
 
-local RemoteData = game:WaitForChild("_REMOTES_NEKO_")
-
+local RemoteData = nil
 
 _G.Island_USERID = game.Players.LocalPlayer.UserId
 
 local CANUSEAUTOCLICKER = true
 
+local MotHitH1 = "Mock"
+local MotHitH2 = "Mock" 
 
+local CropPlaceH1 = "Mock"
+local CropPlaceH2 = "Mock"
 
-local MotHitH1 = RemoteData:FindFirstChild("KillRemoteHashName").Value
-local MotHitH2 = _G.KillRemoteHash 
+local PickupH1 = "Mock"
+local PickupH2 = "Mock"
 
-local CropPlaceH1 = RemoteData:FindFirstChild("CropPlaceHashData").Value
-local CropPlaceH2 = _G.CropPlaceHash
+local PlaceHASHName = "Mock"
+local PlaceHASH = "Mock"
 
-local PickupH1 = RemoteData:FindFirstChild("TOOL_PICKUPHashData").Value
-local PickupH2 = _G.TOOL_PICKUPHash
-
-local PlaceHASHName = RemoteData:FindFirstChild("BlockPlaceHashData").Value
-local PlaceHASH = _G.BlockPlaceHash
-
-local HitHASHName = RemoteData:FindFirstChild("BlockHitHashData").Value
-local HitHASH = _G.BlockHitHash
+local HitHASHName = "Mock"
+local HitHASH = "Mock" 
 
 
 local MAINSCRIPTHANDLER
