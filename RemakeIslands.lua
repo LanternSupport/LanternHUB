@@ -1531,7 +1531,7 @@ local Window
 local Tabs
 
 
-if DeveloperVersion == false then
+if DeveloperVersion == true then
 	if DidKey == true then
 		Window = Fluent:CreateWindow({
 			Title = "Islands.God "..ScriptVersion.." [FREE!] "..holidayMessage,
@@ -1540,7 +1540,7 @@ if DeveloperVersion == false then
 			Size = UDim2.fromOffset(580, 460),
 			Acrylic = true, -- The blur may be detectable, setting this to false disables blur entirely
 			Theme = "Dark",
-			MinimizeKey = Enum.KeyCode.LeftControl -- Used when theres no MinimizeKeybind
+			MinimizeKey = Enum.KeyCode.LeftShift -- Used when theres no MinimizeKeybind
 		})
 
 		Tabs = {
