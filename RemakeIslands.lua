@@ -952,26 +952,49 @@ function FixInv()
 	end
 end
 
-local RemoteData = nil
+local RemoteData = Instance.new("Folder")
+local function addMock(name, value)
+    local val = Instance.new("StringValue")
+    val.Name = name
+    val.Value = value
+    val.Parent = RemoteData
+end
+addMock("KillRemote", "fLafXsVXagmlXhlc/UlpaomJfNzwc")
+addMock("BlockRemote", "CLIENT_BLOCK_HIT_REQUEST")
+addMock("PetCollect", "CLIENT_PET_ANIMAL")
+addMock("FlowerCollect", "client_request_1")
+addMock("SpiritRemote", "gecqaLhbvAbyjo/qDgqEvuQzyryuBnlzh")
+addMock("AngelRemote", "AngelRemote")
+addMock("FishFarmFinishRemote", "FishFarmFinishRemote")
+addMock("CropHashData", "dZnpyRtxna")
+addMock("TreeHashData", "Xoeoxuqilfgenamojfjmj")
+addMock("BlockHitHashData", "Xoeoxuqilfgenamojfjmj")
 
 _G.Island_USERID = game.Players.LocalPlayer.UserId
-
 local CANUSEAUTOCLICKER = true
 
-local MotHitH1 = "Mock"
-local MotHitH2 = "Mock" 
+local MotHitH1 = "IucpoZdgwp"
+local MotHitH2 = "\7\240\159\164\163\240\159\164\161\7\n\7\n\7\nefmmgivC"
 
-local CropPlaceH1 = "Mock"
-local CropPlaceH2 = "Mock"
+local CropPlaceH1 = "uwhiHAMdjExWka"
+local CropPlaceH2 = "\7\240\159\164\163\240\159\164\161\7\n\7\n\7\nffEgdldU"
 
 local PickupH1 = "Mock"
 local PickupH2 = "Mock"
 
-local PlaceHASHName = "Mock"
-local PlaceHASH = "Mock"
+local PlaceHASHName = "uwhiHAMdjExWka"
+local PlaceHASH = "\7\240\159\164\163\240\159\164\161\7\n\7\n\7\nffEgdldU"
 
-local HitHASHName = "Mock"
-local HitHASH = "Mock" 
+local HitHASHName = "Xoeoxuqilfgenamojfjmj"
+local HitHASH = "\7\240\159\164\163\240\159\164\161\7\n\7\n\7\nohIstskUiftvgjy"
+
+_G.KillRemoteHash = MotHitH2
+_G.CropHash = "\7\240\159\164\163\240\159\164\161\7\n\7\n\7\nsDahbvdxZludavlcoipDDMYasPlcm"
+_G.TreeHash = HitHASH
+_G.BlockHitHash = HitHASH
+_G.CropPlaceHash = CropPlaceH2
+_G.BlockPlaceHash = PlaceHASH
+
 
 
 local MAINSCRIPTHANDLER
