@@ -7,14 +7,14 @@ local Window = Fluent:CreateWindow({
     SubTitle = "v1.0",
     TabWidth = 160,
     Size = UDim2.fromOffset(580, 460),
-    Acrylic = false, -- ตั้งเป็น false หากไม่ต้องการพื้นหลังเบลอ (ช่วยเรื่องความลื่นไหล)
+    Acrylic = true,
     Theme = "Dark",
-    MinimizeKey = Enum.KeyCode.LeftControl -- ปุ่มย่อหน้าต่าง UI
+    MinimizeKey = Enum.KeyCode.LeftShift
 })
 
 local Tabs = {
-    Main = Window:AddTab({ Title = "หน้าหลัก", Icon = "home" }),
-    Settings = Window:AddTab({ Title = "ตั้งค่า", Icon = "settings" })
+    Main = Window:AddTab({ Title = "Main", Icon = "home" }),
+    Settings = Window:AddTab({ Title = "Settings", Icon = "settings" })
 }
 
 local Options = Fluent.Options
