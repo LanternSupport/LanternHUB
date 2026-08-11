@@ -106,7 +106,7 @@ do
     _G.JumpPowerValue = 50
     _G.NoclipEnabled = false
     _G.FlyEnabled = false
-    _G.FlySpeed = 0.35
+    _G.FlySpeed = 0.2
 
     -- ระบบ Noclip เดินทะลุกำแพง (ใช้ Stepped Event)
     RunService.Stepped:Connect(function()
