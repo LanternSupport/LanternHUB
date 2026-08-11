@@ -158,6 +158,22 @@ do
         return nil
     end
 
+    -- ตรวจสอบว่าตรงจุดนั้นมีบล็อกอะไรวางอยู่แล้วหรือเปล่า (เอามาจาก Example)
+    local function filledcheck(Position)
+        local Parts = workspace:FindPartsInRegion3(Region3.new(Position, Position), nil, 50)
+        for _, v in ipairs(Parts) do
+            local Parent = v.Parent
+            if Parent then
+                if Parent.Name == "Blocks" then return true, v end
+                Parent = Parent.Parent
+                if Parent and Parent.Name == "Blocks" then return true, v end
+                Parent = Parent and Parent.Parent
+                if Parent and Parent.Name == "Blocks" then return true, v end
+            end
+        end
+        return false, nil
+    end
+
     -- รายการพืชทั้งหมดที่จัดกลุ่มตามประเภท
     local CropList = {
         "[Farmland] Wheat", "[Farmland] Tomato", "[Farmland] Potato", "[Farmland] Carrot", "[Farmland] Spinach", "[Farmland] Onion", "[Farmland] Starfruit", "[Farmland] Radish", "[Farmland] Pineapple", "[Farmland] Pumpkin", "[Farmland] Watermelon", "[Farmland] Spirit", "[Farmland] Chili Pepper", "[Farmland] Void Parasite", "[Farmland] Crystalline",
@@ -165,6 +181,19 @@ do
         "[Trellis] Grape", "[Trellis] Dragon Fruit", "[Trellis] Bean", "[Trellis] Candy Cane",
         "[Berry] Red Berry", "[Berry] Black Berry", "[Berry] Blue Berry", "[Berry] Raspberry",
         "[Sand] Cactus"
+    }
+
+    -- แผนที่แปลงชื่อใน UI ไปเป็นชื่อบล็อกจริงๆ ภายในเกม
+    local CropInternalMap = {
+        ["[Farmland] Wheat"] = "wheat", ["[Farmland] Tomato"] = "tomato", ["[Farmland] Potato"] = "potato",
+        ["[Farmland] Carrot"] = "carrot", ["[Farmland] Spinach"] = "spinach", ["[Farmland] Onion"] = "onion",
+        ["[Farmland] Starfruit"] = "starfruit", ["[Farmland] Radish"] = "radish", ["[Farmland] Pineapple"] = "pineapple",
+        ["[Farmland] Pumpkin"] = "pumpkin", ["[Farmland] Watermelon"] = "melon", ["[Farmland] Spirit"] = "spirit",
+        ["[Farmland] Chili Pepper"] = "chiliPepper", ["[Farmland] Void Parasite"] = "voidParasite", ["[Farmland] Crystalline"] = "crystallineIvy",
+        ["[Pond Planter] Rice"] = "rice", ["[Pond Planter] Seaweed"] = "seaweed",
+        ["[Trellis] Grape"] = "grape", ["[Trellis] Dragon Fruit"] = "dragonfruit", ["[Trellis] Bean"] = "bean", ["[Trellis] Candy Cane"] = "candyCane",
+        ["[Berry] Red Berry"] = "berryBush", ["[Berry] Black Berry"] = "blackberryBush", ["[Berry] Blue Berry"] = "blueberryBush", ["[Berry] Raspberry"] = "raspberryBush",
+        ["[Sand] Cactus"] = "cactus"
     }
 
     -- 1. Select Crops (เลือกพืชที่จะเก็บเกี่ยว)
@@ -192,9 +221,10 @@ do
     -- 4. Auto Planting (เปิด/ปิดปลูกอัตโนมัติ)
     local AutoPlanting = Tabs.Farming:AddToggle("AutoPlanting", {Title = "Auto Planting", Default = false })
 
-    -- ลูปทำงานอัตโนมัติสำหรับ Farming
+    -- ลูปทำงานอัตโนมัติสำหรับ Farming (นำมาจากโค้ด Example เพื่อให้ทำงานได้จริง)
     task.spawn(function()
         while task.wait(0.2) do
+            -- ระบบเก็บเกี่ยว
             if Options.AutoCrops.Value and Remotes.HarvestCrop then
                 pcall(function()
                     local char = Player.Character
@@ -202,23 +232,25 @@ do
                     local blocks = getblocksfolder()
                     
                     if hrp and blocks then
-                        local radSq = PlantingRadius^2
+                        local radSq = (PlantingRadius * 3)^2
                         local selectedCropName = Options.SelectCrops.Value
-                        -- ดึงชื่อพืชจริงๆ ออกจากวงเล็บ เช่น "[Farmland] Wheat" -> "Wheat"
-                        local actualCropName = string.match(selectedCropName, "%] (.*)")
+                        local actualCropName = CropInternalMap[selectedCropName] or "wheat"
 
-                        for _, block in ipairs(blocks:GetChildren()) do
+                        for i, block in ipairs(blocks:GetChildren()) do
                             if not Options.AutoCrops.Value then break end
-                            local bp = block:FindFirstChildWhichIsA("BasePart")
-                            -- ตรวจสอบว่าชื่อบล็อกตรงกับพืชที่เลือก หรือปล่อยผ่านถ้าอยากให้เก็บหมด (แต่ในที่นี้อิงตามที่เลือก)
-                            if bp and (block.Name == actualCropName or block.Name:find(actualCropName)) then
-                                local d = bp.Position - hrp.Position
-                                if d.X*d.X + d.Y*d.Y + d.Z*d.Z < radSq then
-                                    Remotes.HarvestCrop:InvokeServer({
-                                        dZnpyRtxna = "\a\240\159\164\163\240\159\164\161\a\n\a\n\a\nsDahbvdxZludavlcoipDDMYasPlcm",
-                                        player = Player, 
-                                        model = block,
-                                    })
+                            if i % 50 == 0 then task.wait() end -- กันกระตุก
+                            
+                            if block.Name == actualCropName then
+                                local bp = block:FindFirstChildWhichIsA("BasePart")
+                                if bp then
+                                    local d = bp.Position - hrp.Position
+                                    if d.X*d.X + d.Y*d.Y + d.Z*d.Z < radSq then
+                                        Remotes.HarvestCrop:InvokeServer({
+                                            dZnpyRtxna = "\a\240\159\164\163\240\159\164\161\a\n\a\n\a\nsDahbvdxZludavlcoipDDMYasPlcm",
+                                            player = Player, 
+                                            model = block,
+                                        })
+                                    end
                                 end
                             end
                         end
@@ -226,34 +258,44 @@ do
                 end)
             end
 
+            -- ระบบปลูกพืช
             if Options.AutoPlanting.Value and Remotes.BlockPlace then
                 pcall(function()
                     local char = Player.Character
                     local hrp = char and char:FindFirstChild("HumanoidRootPart")
-                    local blocks = getblocksfolder()
                     
-                    if hrp and blocks then
-                        local radSq = PlantingRadius^2
+                    if hrp then
                         local selectedSeedName = Options.SelectPlanting.Value
-                        local actualSeedName = string.match(selectedSeedName, "%] (.*)") .. " Seeds" -- โดยปกติเมล็ดจะเติมคำว่า Seeds
-
-                        -- โค้ดส่วนนี้เป็นแค่โครงสร้างการปลูกอัตโนมัติ การหาตำแหน่งดินว่างๆ อาจจะต้องเช็คบล็อกที่อยู่ใกล้เคียง
-                        for _, block in ipairs(blocks:GetChildren()) do
+                        local actualSeedName = CropInternalMap[selectedSeedName] or "wheat"
+                        
+                        -- ตรวจสอบว่าปลูกเบอร์รี่หรือไม่ เพื่อหาดิน หรือ หญ้า
+                        local isBerryBush = actualSeedName:find("berryBush") ~= nil or actualSeedName:find("Bush") ~= nil
+                        local targetBlock = isBerryBush and "grass" or "soil"
+                        
+                        local center = hrp.Position
+                        local r2 = PlantingRadius * 2
+                        
+                        -- ค้นหาพื้นที่รอบตัวด้วย Region3 (หาดินที่อยู่ใกล้ๆ)
+                        local regionParts = workspace:FindPartsInRegion3(
+                            Region3.new(center - Vector3.new(r2,r2,r2)/2, center + Vector3.new(r2,r2,r2)/2), nil, math.huge
+                        )
+                        local placeOff = Vector3.new(0,3,0)
+                        
+                        for i, v2 in ipairs(regionParts) do
                             if not Options.AutoPlanting.Value then break end
-                            local bp = block:FindFirstChildWhichIsA("BasePart")
-                            -- มองหาบล็อกดิน หรือบล็อกที่เกี่ยวข้องกับการปลูก
-                            if bp and block.Name:find("Soil") then
-                                local d = bp.Position - hrp.Position
-                                if d.X*d.X + d.Y*d.Y + d.Z*d.Z < radSq then
-                                    -- รหัส Bypass สำหรับการวางบล็อก
+                            
+                            -- ถ้าเจอดิน และตรงตำแหน่งปลูกพืชยังว่างอยู่ (ไม่โดนบัง)
+                            if v2.Name == targetBlock and not filledcheck(v2.Position + placeOff) then
+                                task.spawn(function()
                                     Remotes.BlockPlace:InvokeServer({
                                         uwhiHAMdjExWka = "\a\240\159\164\163\240\159\164\161\a\n\a\n\a\nffEgdldU",
-                                        cframe = CFrame.new(bp.Position + Vector3.new(0, 1, 0)),
-                                        blockType = actualSeedName,
+                                        cframe = CFrame.new(v2.Position + placeOff),
+                                        blockType = actualSeedName, 
                                         upperBlock = false,
                                     })
-                                end
+                                end)
                             end
+                            if i % 30 == 0 then task.wait() end -- กันกระตุก
                         end
                     end
                 end)
