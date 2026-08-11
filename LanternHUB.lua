@@ -99,8 +99,25 @@ do
     -- ตัวแปรและ Service สำหรับระบบล็อกค่า
     local Player = game.Players.LocalPlayer
     local RunService = game:GetService("RunService")
+    local UserInputService = game:GetService("UserInputService")
     
     _G.WalkSpeedEnabled = false
+    _G.JumpPowerEnabled = false
+    _G.JumpPowerValue = 50
+    _G.NoclipEnabled = false
+    _G.FlyEnabled = false
+    _G.FlySpeed = 0.35
+
+    -- ระบบ Noclip เดินทะลุกำแพง (ใช้ Stepped Event)
+    RunService.Stepped:Connect(function()
+        if _G.NoclipEnabled and Player.Character then
+            for _, part in ipairs(Player.Character:GetDescendants()) do
+                if part:IsA("BasePart") then
+                    part.CanCollide = false
+                end
+            end
+        end
+    end)
     _G.JumpPowerEnabled = false
     _G.JumpPowerValue = 50
 
@@ -140,6 +157,100 @@ do
         Rounding = 1,
         Callback = function(Value)
             _G.JumpPowerValue = Value
+        end
+    })
+
+    -- ----------------------------------------------------
+    -- ระบบ Fly (บินอิสระ)
+    -- ----------------------------------------------------
+    local function getRoot()
+        return Player.Character and Player.Character:FindFirstChild("HumanoidRootPart")
+    end
+
+    local FlyToggle = Tabs.Players:AddToggle("FlyToggle", {
+        Title = "Fly (บินอิสระ)",
+        Description = "ล็อกความเร็วบินที่ 0.35 (ควบคุมด้วย W A S D)",
+        Default = false,
+        Callback = function(Value)
+            _G.FlyEnabled = Value
+            local root = getRoot()
+            if root then
+                if Value then
+                    -- สร้างตัวยึดจับกลางอากาศ
+                    local bv = Instance.new("BodyVelocity")
+                    bv.Name = "IYFlyBV"
+                    bv.MaxForce = Vector3.new(9e9, 9e9, 9e9)
+                    bv.Velocity = Vector3.zero
+                    bv.Parent = root
+                    
+                    local bg = Instance.new("BodyGyro")
+                    bg.Name = "IYFlyBG"
+                    bg.MaxTorque = Vector3.new(9e9, 9e9, 9e9)
+                    bg.P = 9e4
+                    bg.CFrame = root.CFrame
+                    bg.Parent = root
+                    
+                    if Player.Character:FindFirstChild("Humanoid") then
+                        Player.Character.Humanoid.PlatformStand = true
+                    end
+                else
+                    -- ลบตัวยึดทิ้งเมื่อปิด
+                    if root:FindFirstChild("IYFlyBV") then root.IYFlyBV:Destroy() end
+                    if root:FindFirstChild("IYFlyBG") then root.IYFlyBG:Destroy() end
+                    if Player.Character:FindFirstChild("Humanoid") then
+                        Player.Character.Humanoid.PlatformStand = false
+                    end
+                end
+            end
+        end
+    })
+
+    -- ปุ่มลัดสำหรับเปิด/ปิด Fly
+    Tabs.Players:AddKeybind("FlyKeybind", {
+        Title = "Fly Keybind",
+        Description = "ปุ่มลัดสำหรับเปิด/ปิดระบบบิน",
+        Mode = "Toggle",
+        Default = "G",
+        Callback = function(Value)
+            FlyToggle:SetValue(Value)
+        end
+    })
+
+    -- ระบบควบคุมทิศทางเวลาบิน
+    RunService.RenderStepped:Connect(function()
+        if _G.FlyEnabled then
+            local root = getRoot()
+            local camera = workspace.CurrentCamera
+            if root and camera and root:FindFirstChild("IYFlyBG") and root:FindFirstChild("IYFlyBV") then
+                local moveDir = Vector3.new()
+                if UserInputService:IsKeyDown(Enum.KeyCode.W) then moveDir = moveDir + Vector3.new(0, 0, -1) end
+                if UserInputService:IsKeyDown(Enum.KeyCode.S) then moveDir = moveDir + Vector3.new(0, 0, 1) end
+                if UserInputService:IsKeyDown(Enum.KeyCode.A) then moveDir = moveDir + Vector3.new(-1, 0, 0) end
+                if UserInputService:IsKeyDown(Enum.KeyCode.D) then moveDir = moveDir + Vector3.new(1, 0, 0) end
+                if UserInputService:IsKeyDown(Enum.KeyCode.Space) then moveDir = moveDir + Vector3.new(0, 1, 0) end
+                if UserInputService:IsKeyDown(Enum.KeyCode.LeftShift) then moveDir = moveDir + Vector3.new(0, -1, 0) end
+                
+                -- ทิศทางอิงตามมุมกล้อง
+                local moveVector = camera.CFrame:VectorToWorldSpace(moveDir)
+                
+                -- หมุนตัวละครตามกล้อง
+                root.IYFlyBG.CFrame = camera.CFrame
+                
+                -- นำ 0.35 มาคูณ 100 เพื่อให้แปลงเป็นความเร็ว BodyVelocity ที่เหมาะสมเหมือน Infinite Yield
+                root.IYFlyBV.Velocity = moveVector * (_G.FlySpeed * 100)
+            end
+        end
+    end)
+
+    -- ----------------------------------------------------
+    -- ระบบ Noclip
+    -- ----------------------------------------------------
+    Tabs.Players:AddToggle("NoclipToggle", {
+        Title = "Noclip (เดินทะลุกำแพง)",
+        Description = "เปิด/ปิด การเดินทะลุวัตถุต่างๆ",
+        Default = false,
+        Callback = function(Value)
+            _G.NoclipEnabled = Value
         end
     })
 
