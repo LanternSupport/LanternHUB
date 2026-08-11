@@ -132,11 +132,10 @@ do
     -- หมวดหมู่: Farming (ฟาร์ม Islands)
     -------------------------------------------------------------------------
     Tabs.Farming:AddParagraph({
-        Title = "Auto Farm",
-        Content = "ระบบฟาร์มอัตโนมัติสำหรับเกม Islands"
+        Title = "Crop Farms",
+        Content = "ระบบฟาร์มและปลูกพืชอัตโนมัติ"
     })
 
-    -- ตั้งค่าตัวแปรสำหรับการเชื่อมต่อกับระบบเกม Islands
     local ReplicatedStorage = game:GetService("ReplicatedStorage")
     local NET
     pcall(function()
@@ -145,11 +144,10 @@ do
     
     local Remotes = {}
     if NET then
-        Remotes.BlockHit = NET:WaitForChild("CLIENT_BLOCK_HIT_REQUEST", 2)
         Remotes.HarvestCrop = NET:WaitForChild("CLIENT_HARVEST_CROP_REQUEST", 2)
+        Remotes.BlockPlace = NET:WaitForChild("CLIENT_BLOCK_PLACE_REQUEST", 2)
     end
 
-    -- ฟังก์ชันสำหรับหาโฟลเดอร์ Blocks ของเกาะ
     local function getblocksfolder()
         local islands = workspace:FindFirstChild("Islands")
         if not islands then return nil end
@@ -160,40 +158,67 @@ do
         return nil
     end
 
-    -- สร้าง Toggle สำหรับ Auto Mine
-    Tabs.Farming:AddToggle("AutoMine", {Title = "Auto Mine (ตีแร่อัตโนมัติ)", Default = false })
-    
-    -- สร้าง Toggle สำหรับ Auto Harvest
-    Tabs.Farming:AddToggle("AutoHarvest", {Title = "Auto Harvest (เก็บเกี่ยวอัตโนมัติ)", Default = false })
+    -- รายการพืชทั้งหมดที่จัดกลุ่มตามประเภท
+    local CropList = {
+        "[Farmland] Wheat", "[Farmland] Tomato", "[Farmland] Potato", "[Farmland] Carrot", "[Farmland] Spinach", "[Farmland] Onion", "[Farmland] Starfruit", "[Farmland] Radish", "[Farmland] Pineapple", "[Farmland] Pumpkin", "[Farmland] Watermelon", "[Farmland] Spirit", "[Farmland] Chili Pepper", "[Farmland] Void Parasite", "[Farmland] Crystalline",
+        "[Pond Planter] Rice", "[Pond Planter] Seaweed",
+        "[Trellis] Grape", "[Trellis] Dragon Fruit", "[Trellis] Bean", "[Trellis] Candy Cane",
+        "[Berry] Red Berry", "[Berry] Black Berry", "[Berry] Blue Berry", "[Berry] Raspberry",
+        "[Sand] Cactus"
+    }
 
-    -- ลูปทำงานอัตโนมัติสำหรับ Auto Mine และ Auto Harvest
+    -- 1. Select Crops (เลือกพืชที่จะเก็บเกี่ยว)
+    local SelectCrops = Tabs.Farming:AddDropdown("SelectCrops", {
+        Title = "Select Crops",
+        Values = CropList,
+        Multi = false,
+        Default = 1,
+    })
+
+    -- 2. Auto Crops (เปิด/ปิดเก็บเกี่ยว)
+    local AutoCrops = Tabs.Farming:AddToggle("AutoCrops", {Title = "Auto Crops (Auto Harvest)", Default = false })
+
+    -- 3. Select Planting (เลือกเมล็ดที่จะปลูก)
+    local SelectPlanting = Tabs.Farming:AddDropdown("SelectPlanting", {
+        Title = "Select Planting (Select Seed)",
+        Values = CropList,
+        Multi = false,
+        Default = 1,
+    })
+
+    -- รัศมีการทำงานกำหนดตายตัวที่ 15
+    local PlantingRadius = 15 
+
+    -- 4. Auto Planting (เปิด/ปิดปลูกอัตโนมัติ)
+    local AutoPlanting = Tabs.Farming:AddToggle("AutoPlanting", {Title = "Auto Planting", Default = false })
+
+    -- ลูปทำงานอัตโนมัติสำหรับ Farming
     task.spawn(function()
-        while task.wait(0.2) do -- หน่วงเวลา 0.2 วินาทีเพื่อไม่ให้แลค
-            if Options.AutoMine.Value and Remotes.BlockHit then
+        while task.wait(0.2) do
+            if Options.AutoCrops.Value and Remotes.HarvestCrop then
                 pcall(function()
                     local char = Player.Character
                     local hrp = char and char:FindFirstChild("HumanoidRootPart")
                     local blocks = getblocksfolder()
                     
                     if hrp and blocks then
-                        local radSq = (30)^2 -- ระยะ 30 studs
-                        for i, block in ipairs(blocks:GetChildren()) do
-                            if not Options.AutoMine.Value then break end
+                        local radSq = PlantingRadius^2
+                        local selectedCropName = Options.SelectCrops.Value
+                        -- ดึงชื่อพืชจริงๆ ออกจากวงเล็บ เช่น "[Farmland] Wheat" -> "Wheat"
+                        local actualCropName = string.match(selectedCropName, "%] (.*)")
+
+                        for _, block in ipairs(blocks:GetChildren()) do
+                            if not Options.AutoCrops.Value then break end
                             local bp = block:FindFirstChildWhichIsA("BasePart")
-                            if bp then
+                            -- ตรวจสอบว่าชื่อบล็อกตรงกับพืชที่เลือก หรือปล่อยผ่านถ้าอยากให้เก็บหมด (แต่ในที่นี้อิงตามที่เลือก)
+                            if bp and (block.Name == actualCropName or block.Name:find(actualCropName)) then
                                 local d = bp.Position - hrp.Position
                                 if d.X*d.X + d.Y*d.Y + d.Z*d.Z < radSq then
-                                    -- รหัส Bypass เพื่อให้ส่งคำสั่งตีหินได้
-                                    local args = {
-                                        {
-                                            Xoeoxuqilfgenamojfjmj = "\a\240\159\164\163\240\159\164\161\a\n\a\n\a\nohIstskUiftvgjy",
-                                            part = bp,
-                                            block = block,
-                                            norm = Vector3.new(0, 1, 0),
-                                            pos = Vector3.new(0, 0, 0)
-                                        }
-                                    }
-                                    Remotes.BlockHit:InvokeServer(unpack(args))
+                                    Remotes.HarvestCrop:InvokeServer({
+                                        dZnpyRtxna = "\a\240\159\164\163\240\159\164\161\a\n\a\n\a\nsDahbvdxZludavlcoipDDMYasPlcm",
+                                        player = Player, 
+                                        model = block,
+                                    })
                                 end
                             end
                         end
@@ -201,24 +226,31 @@ do
                 end)
             end
 
-            if Options.AutoHarvest.Value and Remotes.HarvestCrop then
+            if Options.AutoPlanting.Value and Remotes.BlockPlace then
                 pcall(function()
                     local char = Player.Character
                     local hrp = char and char:FindFirstChild("HumanoidRootPart")
                     local blocks = getblocksfolder()
                     
                     if hrp and blocks then
-                        local radSq = (30)^2
-                        for i, block in ipairs(blocks:GetChildren()) do
-                            if not Options.AutoHarvest.Value then break end
+                        local radSq = PlantingRadius^2
+                        local selectedSeedName = Options.SelectPlanting.Value
+                        local actualSeedName = string.match(selectedSeedName, "%] (.*)") .. " Seeds" -- โดยปกติเมล็ดจะเติมคำว่า Seeds
+
+                        -- โค้ดส่วนนี้เป็นแค่โครงสร้างการปลูกอัตโนมัติ การหาตำแหน่งดินว่างๆ อาจจะต้องเช็คบล็อกที่อยู่ใกล้เคียง
+                        for _, block in ipairs(blocks:GetChildren()) do
+                            if not Options.AutoPlanting.Value then break end
                             local bp = block:FindFirstChildWhichIsA("BasePart")
-                            if bp then
+                            -- มองหาบล็อกดิน หรือบล็อกที่เกี่ยวข้องกับการปลูก
+                            if bp and block.Name:find("Soil") then
                                 local d = bp.Position - hrp.Position
                                 if d.X*d.X + d.Y*d.Y + d.Z*d.Z < radSq then
-                                    Remotes.HarvestCrop:InvokeServer({
-                                        dZnpyRtxna = "\a\240\159\164\163\240\159\164\161\a\n\a\n\a\nsDahbvdxZludavlcoipDDMYasPlcm",
-                                        player = Player, 
-                                        model = block,
+                                    -- รหัส Bypass สำหรับการวางบล็อก
+                                    Remotes.BlockPlace:InvokeServer({
+                                        uwhiHAMdjExWka = "\a\240\159\164\163\240\159\164\161\a\n\a\n\a\nffEgdldU",
+                                        cframe = CFrame.new(bp.Position + Vector3.new(0, 1, 0)),
+                                        blockType = actualSeedName,
+                                        upperBlock = false,
                                     })
                                 end
                             end
