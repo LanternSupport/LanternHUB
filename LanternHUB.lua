@@ -169,7 +169,7 @@ do
 
     local FlyToggle = Tabs.Players:AddToggle("FlyToggle", {
         Title = "Fly (บินอิสระ)",
-        Description = "ล็อกความเร็วบินที่ 0.35 (ควบคุมด้วย W A S D)",
+        Description = "ล็อกความเร็วบินที่ 0.2 (ควบคุมด้วย W A S D)",
         Default = false,
         Callback = function(Value)
             _G.FlyEnabled = Value
@@ -236,7 +236,7 @@ do
                 -- หมุนตัวละครตามกล้อง
                 root.IYFlyBG.CFrame = camera.CFrame
                 
-                -- นำ 0.35 มาคูณ 100 เพื่อให้แปลงเป็นความเร็ว BodyVelocity ที่เหมาะสมเหมือน Infinite Yield
+                -- นำ 0.2 มาคูณ 100 เพื่อให้แปลงเป็นความเร็ว BodyVelocity ที่เหมาะสมเหมือน Infinite Yield
                 root.IYFlyBV.Velocity = moveVector * (_G.FlySpeed * 100)
             end
         end
