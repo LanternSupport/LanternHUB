@@ -96,37 +96,70 @@ do
         Content = "ปรับแต่งความสามารถของตัวละครของคุณ"
     })
 
-    -- ตัวแปรเก็บค่า WalkSpeed / JumpPower
+    -- ตัวแปรและ Service สำหรับระบบล็อกค่า
     local Player = game.Players.LocalPlayer
+    local RunService = game:GetService("RunService")
+    
+    _G.WalkSpeedEnabled = false
+    _G.JumpPowerEnabled = false
+    _G.JumpPowerValue = 50
 
-    Tabs.Players:AddSlider("WalkSpeed", {
-        Title = "WalkSpeed (ความเร็ว)",
-        Description = "ปรับความเร็วในการเดิน",
-        Default = 16,
-        Min = 16,
-        Max = 300,
-        Rounding = 1,
+    Tabs.Players:AddToggle("WalkSpeedToggle", {
+        Title = "Walk Speed",
+        Description = "เปิด/ปิด การล็อกความเร็วการเดินไว้ที่ 25",
+        Default = false,
         Callback = function(Value)
-            if Player.Character and Player.Character:FindFirstChild("Humanoid") then
-                Player.Character.Humanoid.WalkSpeed = Value
+            _G.WalkSpeedEnabled = Value
+            -- คืนค่าเริ่มต้น (16) เมื่อกดปิด
+            if not Value and Player.Character and Player.Character:FindFirstChild("Humanoid") then
+                Player.Character.Humanoid.WalkSpeed = 16 
             end
         end
     })
 
-    Tabs.Players:AddSlider("JumpPower", {
-        Title = "JumpPower (กระโดดสูง)",
+    Tabs.Players:AddToggle("JumpPowerToggle", {
+        Title = "Jump Power",
+        Description = "เปิด/ปิด การล็อกพลังกระโดด",
+        Default = false,
+        Callback = function(Value)
+            _G.JumpPowerEnabled = Value
+            -- คืนค่าเริ่มต้น (50) เมื่อกดปิด
+            if not Value and Player.Character and Player.Character:FindFirstChild("Humanoid") then
+                Player.Character.Humanoid.UseJumpPower = true
+                Player.Character.Humanoid.JumpPower = 50
+            end
+        end
+    })
+
+    Tabs.Players:AddSlider("JumpPowerSlider", {
+        Title = "Jump Power Level",
         Description = "ปรับความสูงในการกระโดด",
         Default = 50,
         Min = 50,
         Max = 300,
         Rounding = 1,
         Callback = function(Value)
-            if Player.Character and Player.Character:FindFirstChild("Humanoid") then
-                Player.Character.Humanoid.UseJumpPower = true
-                Player.Character.Humanoid.JumpPower = Value
-            end
+            _G.JumpPowerValue = Value
         end
     })
+
+    -- ลูปสำหรับบังคับค่า WalkSpeed และ JumpPower ตลอดเวลา (Bypass Anti-Cheat / Cooldown)
+    RunService.RenderStepped:Connect(function()
+        local Character = Player.Character 
+        if Character then
+            local Humanoid = Character:FindFirstChild("Humanoid")
+            if Humanoid then
+                if _G.WalkSpeedEnabled then
+                    Humanoid.WalkSpeed = 25
+                end
+                
+                if _G.JumpPowerEnabled then
+                    Humanoid.UseJumpPower = true
+                    Humanoid.JumpPower = _G.JumpPowerValue
+                end
+            end
+        end
+    end)
 
     -------------------------------------------------------------------------
     -- หมวดหมู่: Farming (ฟาร์ม Islands)
