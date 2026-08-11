@@ -3,7 +3,7 @@ local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/d
 local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/InterfaceManager.lua"))()
 
 local Window = Fluent:CreateWindow({
-    Title = "Lantern HUB",
+    Title = "Lantern HUB (Islands Beta)",
     SubTitle = "v1.0",
     TabWidth = 160,
     Size = UDim2.fromOffset(580, 460),
@@ -14,6 +14,11 @@ local Window = Fluent:CreateWindow({
 
 local Tabs = {
     Main = Window:AddTab({ Title = "Main", Icon = "home" }),
+    Farming = Window:AddTab({ Title = "Farming", Icon = "leaf" }),
+    Vending = Window:AddTab({ Title = "Vending", Icon = "shopping-cart" }),
+    Building = Window:AddTab({ Title = "Building", Icon = "hammer" }),
+    Players = Window:AddTab({ Title = "Players", Icon = "users" }),
+    Misc = Window:AddTab({ Title = "Misc", Icon = "box" }),
     Settings = Window:AddTab({ Title = "Settings", Icon = "settings" })
 }
 
@@ -29,7 +34,7 @@ do
 
     -- ข้อความแสดงในหน้าหลัก
     Tabs.Main:AddParagraph({
-        Title = "ยินดีต้อนรับสู่ Lantern HUB",
+        Title = "ยินดีต้อนรับสู่ Lantern HUB (Islands Scripts)",
         Content = "นี่คือโครงสร้าง UI เริ่มต้น คุณสามารถเพิ่มฟังก์ชันต่างๆ ได้ที่นี่"
     })
 
