@@ -228,7 +228,7 @@ do
                 if UserInputService:IsKeyDown(Enum.KeyCode.A) then moveDir = moveDir + Vector3.new(-1, 0, 0) end
                 if UserInputService:IsKeyDown(Enum.KeyCode.D) then moveDir = moveDir + Vector3.new(1, 0, 0) end
                 if UserInputService:IsKeyDown(Enum.KeyCode.Space) then moveDir = moveDir + Vector3.new(0, 1, 0) end
-                if UserInputService:IsKeyDown(Enum.KeyCode.LeftShift) then moveDir = moveDir + Vector3.new(0, -1, 0) end
+                -- ถอดปุ่ม LeftShift ออก ไม่ให้ตัวไหลลงเวลาเบิร์นความเร็ว
                 
                 -- ทิศทางอิงตามมุมกล้อง
                 local moveVector = camera.CFrame:VectorToWorldSpace(moveDir)
@@ -251,6 +251,14 @@ do
         Default = false,
         Callback = function(Value)
             _G.NoclipEnabled = Value
+            -- คืนค่า CanCollide กลับเป็นปกติเมื่อกดปิด
+            if not Value and Player.Character then
+                for _, part in ipairs(Player.Character:GetDescendants()) do
+                    if part:IsA("BasePart") and (part.Name == "HumanoidRootPart" or part.Name == "Torso" or part.Name == "UpperTorso" or part.Name == "LowerTorso" or part.Name == "Head") then
+                        part.CanCollide = true
+                    end
+                end
+            end
         end
     })
 
