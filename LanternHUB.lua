@@ -174,43 +174,52 @@ do
         return false, nil
     end
 
-    -- รายการพืชทั้งหมดที่จัดกลุ่มตามประเภท
-    local CropList = {
-        "[Farmland] Wheat", "[Farmland] Tomato", "[Farmland] Potato", "[Farmland] Carrot", "[Farmland] Spinach", "[Farmland] Onion", "[Farmland] Starfruit", "[Farmland] Radish", "[Farmland] Pineapple", "[Farmland] Pumpkin", "[Farmland] Watermelon", "[Farmland] Spirit", "[Farmland] Chili Pepper", "[Farmland] Void Parasite", "[Farmland] Crystalline",
-        "[Pond Planter] Rice", "[Pond Planter] Seaweed",
-        "[Trellis] Grape", "[Trellis] Dragon Fruit", "[Trellis] Bean", "[Trellis] Candy Cane",
-        "[Berry] Red Berry", "[Berry] Black Berry", "[Berry] Blue Berry", "[Berry] Raspberry",
-        "[Sand] Cactus"
+    -- รายการพืชที่ถูกจัดกลุ่มเป็นหมวดหมู่ (จะได้ไม่รก)
+    local CropCategories = {"Farmland", "Pond Planter", "Trellis", "Berry", "Sand"}
+    local CropItems = {
+        ["Farmland"] = {"Wheat", "Tomato", "Potato", "Carrot", "Spinach", "Onion", "Starfruit", "Radish", "Pineapple", "Pumpkin", "Watermelon", "Spirit", "Chili Pepper", "Void Parasite", "Crystalline"},
+        ["Pond Planter"] = {"Rice", "Seaweed"},
+        ["Trellis"] = {"Grape", "Dragon Fruit", "Bean", "Candy Cane"},
+        ["Berry"] = {"Red Berry", "Black Berry", "Blue Berry", "Raspberry"},
+        ["Sand"] = {"Cactus"}
     }
 
-    -- แผนที่แปลงชื่อใน UI ไปเป็นชื่อบล็อกจริงๆ ภายในเกม
+    -- แผนที่แปลงชื่อใน UI ไปเป็นชื่อบล็อกจริงๆ ภายในเกม (ไม่ต้องมีวงเล็บแล้ว)
     local CropInternalMap = {
-        ["[Farmland] Wheat"] = "wheat", ["[Farmland] Tomato"] = "tomato", ["[Farmland] Potato"] = "potato",
-        ["[Farmland] Carrot"] = "carrot", ["[Farmland] Spinach"] = "spinach", ["[Farmland] Onion"] = "onion",
-        ["[Farmland] Starfruit"] = "starfruit", ["[Farmland] Radish"] = "radish", ["[Farmland] Pineapple"] = "pineapple",
-        ["[Farmland] Pumpkin"] = "pumpkin", ["[Farmland] Watermelon"] = "melon", ["[Farmland] Spirit"] = "spirit",
-        ["[Farmland] Chili Pepper"] = "chiliPepper", ["[Farmland] Void Parasite"] = "voidParasite", ["[Farmland] Crystalline"] = "crystallineIvy",
-        ["[Pond Planter] Rice"] = "rice", ["[Pond Planter] Seaweed"] = "seaweed",
-        ["[Trellis] Grape"] = "grape", ["[Trellis] Dragon Fruit"] = "dragonfruit", ["[Trellis] Bean"] = "bean", ["[Trellis] Candy Cane"] = "candyCane",
-        ["[Berry] Red Berry"] = "berryBush", ["[Berry] Black Berry"] = "blackberryBush", ["[Berry] Blue Berry"] = "blueberryBush", ["[Berry] Raspberry"] = "raspberryBush",
-        ["[Sand] Cactus"] = "cactus"
+        ["Wheat"] = "wheat", ["Tomato"] = "tomato", ["Potato"] = "potato",
+        ["Carrot"] = "carrot", ["Spinach"] = "spinach", ["Onion"] = "onion",
+        ["Starfruit"] = "starfruit", ["Radish"] = "radish", ["Pineapple"] = "pineapple",
+        ["Pumpkin"] = "pumpkin", ["Watermelon"] = "melon", ["Spirit"] = "spirit",
+        ["Chili Pepper"] = "chiliPepper", ["Void Parasite"] = "voidParasite", ["Crystalline"] = "crystallineIvy",
+        ["Rice"] = "rice", ["Seaweed"] = "seaweed",
+        ["Grape"] = "grape", ["Dragon Fruit"] = "dragonfruit", ["Bean"] = "bean", ["Candy Cane"] = "candyCane",
+        ["Red Berry"] = "berryBush", ["Black Berry"] = "blackberryBush", ["Blue Berry"] = "blueberryBush", ["Raspberry"] = "raspberryBush",
+        ["Cactus"] = "cactus"
     }
 
-    -- 1. Select Crops (เลือกพืชที่จะเก็บเกี่ยว)
-    local SelectCrops = Tabs.Farming:AddDropdown("SelectCrops", {
-        Title = "Select Crops",
-        Values = CropList,
+    -- 1. เลือกหมวดหมู่หลักก่อน (เมื่อเปลี่ยนหมวดหมู่ จะไปเปลี่ยนตัวเลือกในพืช)
+    local SelectCategory = Tabs.Farming:AddDropdown("SelectCategory", {
+        Title = "Select Category (เลือกหมวดหมู่พืช)",
+        Values = CropCategories,
         Multi = false,
         Default = 1,
     })
 
-    -- 2. Auto Crops (เปิด/ปิดเก็บเกี่ยว)
+    -- 2. Select Crops (เลือกพืชที่จะเก็บเกี่ยว)
+    local SelectCrops = Tabs.Farming:AddDropdown("SelectCrops", {
+        Title = "Select Crops (เลือกพืชที่จะเก็บ)",
+        Values = CropItems["Farmland"],
+        Multi = false,
+        Default = 1,
+    })
+
+    -- 3. Auto Crops (เปิด/ปิดเก็บเกี่ยว)
     local AutoCrops = Tabs.Farming:AddToggle("AutoCrops", {Title = "Auto Crops (Auto Harvest)", Default = false })
 
-    -- 3. Select Planting (เลือกเมล็ดที่จะปลูก)
+    -- 4. Select Planting (เลือกเมล็ดที่จะปลูก)
     local SelectPlanting = Tabs.Farming:AddDropdown("SelectPlanting", {
-        Title = "Select Planting (Select Seed)",
-        Values = CropList,
+        Title = "Select Planting (เลือกเมล็ดพันธุ์)",
+        Values = CropItems["Farmland"],
         Multi = false,
         Default = 1,
     })
@@ -218,8 +227,18 @@ do
     -- รัศมีการทำงานกำหนดตายตัวที่ 15
     local PlantingRadius = 15 
 
-    -- 4. Auto Planting (เปิด/ปิดปลูกอัตโนมัติ)
+    -- 5. Auto Planting (เปิด/ปิดปลูกอัตโนมัติ)
     local AutoPlanting = Tabs.Farming:AddToggle("AutoPlanting", {Title = "Auto Planting", Default = false })
+
+    -- โค้ดสำหรับอัปเดตตัวเลือกพืช เมื่อเปลี่ยนหมวดหมู่
+    SelectCategory:OnChanged(function(Value)
+        -- อัปเดตรายการใน Dropdown ตามหมวดหมู่ที่เลือก
+        SelectCrops:SetValues(CropItems[Value])
+        SelectCrops:SetValue(CropItems[Value][1])
+        
+        SelectPlanting:SetValues(CropItems[Value])
+        SelectPlanting:SetValue(CropItems[Value][1])
+    end)
 
     -- ลูปทำงานอัตโนมัติสำหรับ Farming (นำมาจากโค้ด Example เพื่อให้ทำงานได้จริง)
     task.spawn(function()
