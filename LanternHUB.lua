@@ -250,6 +250,7 @@ do
                                             player = Player, 
                                             model = block,
                                         })
+                                        task.wait(0.1) -- หน่วงเวลา 0.1 วิเพื่อค่อยๆ เก็บเกี่ยว
                                     end
                                 end
                             end
@@ -294,6 +295,7 @@ do
                                         upperBlock = false,
                                     })
                                 end)
+                                task.wait(0.1) -- หน่วงเวลา 0.1 วิเพื่อค่อยๆ ปลูก
                             end
                             if i % 30 == 0 then task.wait() end -- กันกระตุก
                         end
