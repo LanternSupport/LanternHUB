@@ -3,7 +3,7 @@ local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/d
 local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/InterfaceManager.lua"))()
 
 local Window = Fluent:CreateWindow({
-    Title = "Lantern HUB (Islands Beta)",
+    Title = "Lantern HUB",
     SubTitle = "v1.0",
     TabWidth = 160,
     Size = UDim2.fromOffset(580, 460),
@@ -34,7 +34,7 @@ do
 
     -- ข้อความแสดงในหน้าหลัก
     Tabs.Main:AddParagraph({
-        Title = "ยินดีต้อนรับสู่ Lantern HUB (Islands Scripts)",
+        Title = "ยินดีต้อนรับสู่ Lantern HUB",
         Content = "นี่คือโครงสร้าง UI เริ่มต้น คุณสามารถเพิ่มฟังก์ชันต่างๆ ได้ที่นี่"
     })
 
@@ -81,14 +81,152 @@ do
         Rounding = 1,
         Callback = function(Value)
             print("ความเร็วปรับเป็น:", Value)
-            -- if game.Players.LocalPlayer.Character then
-            --     game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = Value
-            -- end
         end
     })
 
     Slider:OnChanged(function(Value)
         print("Slider เปลี่ยนแปลงเป็น:", Value)
+    end)
+
+    -------------------------------------------------------------------------
+    -- หมวดหมู่: Players (ผู้เล่น)
+    -------------------------------------------------------------------------
+    Tabs.Players:AddParagraph({
+        Title = "Player Settings",
+        Content = "ปรับแต่งความสามารถของตัวละครของคุณ"
+    })
+
+    -- ตัวแปรเก็บค่า WalkSpeed / JumpPower
+    local Player = game.Players.LocalPlayer
+
+    Tabs.Players:AddSlider("WalkSpeed", {
+        Title = "WalkSpeed (ความเร็ว)",
+        Description = "ปรับความเร็วในการเดิน",
+        Default = 16,
+        Min = 16,
+        Max = 300,
+        Rounding = 1,
+        Callback = function(Value)
+            if Player.Character and Player.Character:FindFirstChild("Humanoid") then
+                Player.Character.Humanoid.WalkSpeed = Value
+            end
+        end
+    })
+
+    Tabs.Players:AddSlider("JumpPower", {
+        Title = "JumpPower (กระโดดสูง)",
+        Description = "ปรับความสูงในการกระโดด",
+        Default = 50,
+        Min = 50,
+        Max = 300,
+        Rounding = 1,
+        Callback = function(Value)
+            if Player.Character and Player.Character:FindFirstChild("Humanoid") then
+                Player.Character.Humanoid.UseJumpPower = true
+                Player.Character.Humanoid.JumpPower = Value
+            end
+        end
+    })
+
+    -------------------------------------------------------------------------
+    -- หมวดหมู่: Farming (ฟาร์ม Islands)
+    -------------------------------------------------------------------------
+    Tabs.Farming:AddParagraph({
+        Title = "Auto Farm",
+        Content = "ระบบฟาร์มอัตโนมัติสำหรับเกม Islands"
+    })
+
+    -- ตั้งค่าตัวแปรสำหรับการเชื่อมต่อกับระบบเกม Islands
+    local ReplicatedStorage = game:GetService("ReplicatedStorage")
+    local NET
+    pcall(function()
+        NET = ReplicatedStorage.rbxts_include.node_modules["@rbxts"].net.out._NetManaged
+    end)
+    
+    local Remotes = {}
+    if NET then
+        Remotes.BlockHit = NET:WaitForChild("CLIENT_BLOCK_HIT_REQUEST", 2)
+        Remotes.HarvestCrop = NET:WaitForChild("CLIENT_HARVEST_CROP_REQUEST", 2)
+    end
+
+    -- ฟังก์ชันสำหรับหาโฟลเดอร์ Blocks ของเกาะ
+    local function getblocksfolder()
+        local islands = workspace:FindFirstChild("Islands")
+        if not islands then return nil end
+        for _, island in ipairs(islands:GetChildren()) do
+            local b = island:FindFirstChild("Blocks")
+            if b then return b end
+        end
+        return nil
+    end
+
+    -- สร้าง Toggle สำหรับ Auto Mine
+    Tabs.Farming:AddToggle("AutoMine", {Title = "Auto Mine (ตีแร่อัตโนมัติ)", Default = false })
+    
+    -- สร้าง Toggle สำหรับ Auto Harvest
+    Tabs.Farming:AddToggle("AutoHarvest", {Title = "Auto Harvest (เก็บเกี่ยวอัตโนมัติ)", Default = false })
+
+    -- ลูปทำงานอัตโนมัติสำหรับ Auto Mine และ Auto Harvest
+    task.spawn(function()
+        while task.wait(0.2) do -- หน่วงเวลา 0.2 วินาทีเพื่อไม่ให้แลค
+            if Options.AutoMine.Value and Remotes.BlockHit then
+                pcall(function()
+                    local char = Player.Character
+                    local hrp = char and char:FindFirstChild("HumanoidRootPart")
+                    local blocks = getblocksfolder()
+                    
+                    if hrp and blocks then
+                        local radSq = (30)^2 -- ระยะ 30 studs
+                        for i, block in ipairs(blocks:GetChildren()) do
+                            if not Options.AutoMine.Value then break end
+                            local bp = block:FindFirstChildWhichIsA("BasePart")
+                            if bp then
+                                local d = bp.Position - hrp.Position
+                                if d.X*d.X + d.Y*d.Y + d.Z*d.Z < radSq then
+                                    -- รหัส Bypass เพื่อให้ส่งคำสั่งตีหินได้
+                                    local args = {
+                                        {
+                                            Xoeoxuqilfgenamojfjmj = "\a\240\159\164\163\240\159\164\161\a\n\a\n\a\nohIstskUiftvgjy",
+                                            part = bp,
+                                            block = block,
+                                            norm = Vector3.new(0, 1, 0),
+                                            pos = Vector3.new(0, 0, 0)
+                                        }
+                                    }
+                                    Remotes.BlockHit:InvokeServer(unpack(args))
+                                end
+                            end
+                        end
+                    end
+                end)
+            end
+
+            if Options.AutoHarvest.Value and Remotes.HarvestCrop then
+                pcall(function()
+                    local char = Player.Character
+                    local hrp = char and char:FindFirstChild("HumanoidRootPart")
+                    local blocks = getblocksfolder()
+                    
+                    if hrp and blocks then
+                        local radSq = (30)^2
+                        for i, block in ipairs(blocks:GetChildren()) do
+                            if not Options.AutoHarvest.Value then break end
+                            local bp = block:FindFirstChildWhichIsA("BasePart")
+                            if bp then
+                                local d = bp.Position - hrp.Position
+                                if d.X*d.X + d.Y*d.Y + d.Z*d.Z < radSq then
+                                    Remotes.HarvestCrop:InvokeServer({
+                                        dZnpyRtxna = "\a\240\159\164\163\240\159\164\161\a\n\a\n\a\nsDahbvdxZludavlcoipDDMYasPlcm",
+                                        player = Player, 
+                                        model = block,
+                                    })
+                                end
+                            end
+                        end
+                    end
+                end)
+            end
+        end
     end)
 end
 
