@@ -143,19 +143,51 @@ do
         end
     })
 
-    -- ลูปสำหรับบังคับค่า WalkSpeed และ JumpPower ตลอดเวลา (Bypass Anti-Cheat / Cooldown)
-    RunService.RenderStepped:Connect(function()
-        local Character = Player.Character 
-        if Character then
-            local Humanoid = Character:FindFirstChild("Humanoid")
-            if Humanoid then
+    -- ระบบ Hook เพื่อแก้ไข WalkSpeed ทันทีเมื่อเกมพยายามรีเซ็ต
+    local function SetupCharacterBypass(character)
+        -- รอให้ Humanoid โหลดเสร็จ
+        local humanoid = character:WaitForChild("Humanoid", 5)
+        if humanoid then
+            -- เมื่อเกมพยายามเปลี่ยน WalkSpeed สคริปต์จะเปลี่ยนกลับทันทีแบบไม่มีดีเลย์
+            humanoid:GetPropertyChangedSignal("WalkSpeed"):Connect(function()
                 if _G.WalkSpeedEnabled then
-                    Humanoid.WalkSpeed = 25
+                    humanoid.WalkSpeed = 25
+                end
+            end)
+            
+            -- บังคับพลังกระโดดด้วยวิธีเดียวกัน
+            humanoid:GetPropertyChangedSignal("JumpPower"):Connect(function()
+                if _G.JumpPowerEnabled then
+                    humanoid.UseJumpPower = true
+                    humanoid.JumpPower = _G.JumpPowerValue
+                end
+            end)
+        end
+    end
+
+    -- ดึงตัวละครปัจจุบันมาทำงาน
+    if Player.Character then
+        SetupCharacterBypass(Player.Character)
+    end
+
+    -- ป้องกันกรณีตายแล้วเกิดใหม่ ให้สคริปต์ยังทำงานต่อ
+    Player.CharacterAdded:Connect(function(char)
+        SetupCharacterBypass(char)
+    end)
+    
+    -- ลูปสำหรับช่วยเช็คความชัวร์ (เสริมทัพให้ GetPropertyChangedSignal อีกที)
+    RunService.RenderStepped:Connect(function()
+        local char = Player.Character 
+        if char then
+            local hum = char:FindFirstChild("Humanoid")
+            if hum then
+                if _G.WalkSpeedEnabled and hum.WalkSpeed ~= 25 then
+                    hum.WalkSpeed = 25
                 end
                 
-                if _G.JumpPowerEnabled then
-                    Humanoid.UseJumpPower = true
-                    Humanoid.JumpPower = _G.JumpPowerValue
+                if _G.JumpPowerEnabled and hum.JumpPower ~= _G.JumpPowerValue then
+                    hum.UseJumpPower = true
+                    hum.JumpPower = _G.JumpPowerValue
                 end
             end
         end
