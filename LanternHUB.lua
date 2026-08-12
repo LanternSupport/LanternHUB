@@ -32,62 +32,7 @@ do
         Duration = 5
     })
 
-    -- ข้อความแสดงในหน้าหลัก
-    Tabs.Main:AddParagraph({
-        Title = "ยินดีต้อนรับสู่ Lantern HUB",
-        Content = "นี่คือโครงสร้าง UI เริ่มต้น คุณสามารถเพิ่มฟังก์ชันต่างๆ ได้ที่นี่"
-    })
-
-    -- ตัวอย่างปุ่ม
-    Tabs.Main:AddButton({
-        Title = "ปุ่มทดสอบ",
-        Description = "คลิกเพื่อดู Dialog",
-        Callback = function()
-            Window:Dialog({
-                Title = "ข้อความแจ้งเตือน",
-                Content = "คุณได้คลิกปุ่มทดสอบแล้ว!",
-                Buttons = {
-                    {
-                        Title = "ตกลง",
-                        Callback = function()
-                            print("คลิกตกลง")
-                        end
-                    },
-                    {
-                        Title = "ยกเลิก",
-                        Callback = function()
-                            print("คลิกยกเลิก")
-                        end
-                    }
-                }
-            })
-        end
-    })
-    
-    -- ตัวอย่างสวิตช์เปิดปิด (Toggle)
-    local Toggle = Tabs.Main:AddToggle("AutoFarm", {Title = "เปิดใช้งานฟังก์ชัน", Default = false })
-    Toggle:OnChanged(function()
-        print("สถานะปุ่มถูกเปลี่ยนเป็น:", Options.AutoFarm.Value)
-        -- โค้ดทำงานเมื่อเปิด/ปิด
-    end)
-    
-    -- ตัวอย่างแถบเลื่อน (Slider)
-    local Slider = Tabs.Main:AddSlider("WalkSpeed", {
-        Title = "ความเร็วเดิน (WalkSpeed)",
-        Description = "ปรับความเร็วของตัวละคร",
-        Default = 16,
-        Min = 16,
-        Max = 200,
-        Rounding = 1,
-        Callback = function(Value)
-            print("ความเร็วปรับเป็น:", Value)
-        end
-    })
-
-    Slider:OnChanged(function(Value)
-        print("Slider เปลี่ยนแปลงเป็น:", Value)
-    end)
-
+    -- ( Main)
     -------------------------------------------------------------------------
     -- หมวดหมู่: Players (ผู้เล่น)
     -------------------------------------------------------------------------
@@ -96,7 +41,7 @@ do
         Content = "ปรับแต่งความสามารถของตัวละครของคุณ"
     })
 
-    -- ตัวแปรและ Service สำหรับระบบล็อกค่า
+    -- ตัวแปรและ Service สำหรับระบบล็อคค่า
     local Player = game.Players.LocalPlayer
     local RunService = game:GetService("RunService")
     local UserInputService = game:GetService("UserInputService")
@@ -123,7 +68,7 @@ do
 
     Tabs.Players:AddToggle("WalkSpeedToggle", {
         Title = "Walk Speed",
-        Description = "เปิด/ปิด การล็อกความเร็วการเดินไว้ที่ 25",
+        Description = "เปิด/ปิด การล็อคความเร็วการเดินไว้ที่ 25",
         Default = false,
         Callback = function(Value)
             _G.WalkSpeedEnabled = Value
@@ -136,11 +81,11 @@ do
 
     Tabs.Players:AddToggle("JumpPowerToggle", {
         Title = "Jump Power",
-        Description = "เปิด/ปิด การล็อกพลังกระโดด",
+        Description = "เปิด/ปิด การล็อคพลังกระโดด",
         Default = false,
         Callback = function(Value)
             _G.JumpPowerEnabled = Value
-            -- คืนค่าเริ่มต้น (50) เมื่อกดปิด
+            -- คืนค่าเริ่มต้น (50) เมื่อดปิด
             if not Value and Player.Character and Player.Character:FindFirstChild("Humanoid") then
                 Player.Character.Humanoid.UseJumpPower = true
                 Player.Character.Humanoid.JumpPower = 50
@@ -169,7 +114,7 @@ do
 
     local FlyToggle = Tabs.Players:AddToggle("FlyToggle", {
         Title = "Fly (บินอิสระ)",
-        Description = "ล็อกความเร็วบินที่ 0.2 (ควบคุมด้วย W A S D)",
+        Description = "ล็อคความเร็วบินที่ 0.2 (ควบคุมด้วย W A S D)",
         Default = false,
         Callback = function(Value)
             _G.FlyEnabled = Value
@@ -246,7 +191,7 @@ do
     -- ระบบ Noclip
     -- ----------------------------------------------------
     Tabs.Players:AddToggle("NoclipToggle", {
-        Title = "Noclip (เดินทะลุกำแพง)",
+        Title = "Noclip (เดินทะลุำพง)",
         Description = "เปิด/ปิด การเดินทะลุวัตถุต่างๆ",
         Default = false,
         Callback = function(Value)
@@ -262,7 +207,7 @@ do
         end
     })
 
-    -- ระบบ Hook เพื่อแก้ไข WalkSpeed ทันทีเมื่อเกมพยายามรีเซ็ต
+    -- ระบบ Hook เพื่อแก้ไข WalkSpeed ทันทีเมื่อเมพยายามรีเซ็ต
     local function SetupCharacterBypass(character)
         -- รอให้ Humanoid โหลดเสร็จ
         local humanoid = character:WaitForChild("Humanoid", 5)
@@ -342,7 +287,7 @@ do
         return nil
     end
 
-    -- ตรวจสอบว่าตรงจุดนั้นมีบล็อกอะไรวางอยู่แล้วหรือเปล่า (เอามาจาก Example)
+    -- ตรวจสอบว่าตรงจุดนั้นมีบล็อคอะไรวางอยู่แล้วหรือเปล่า (เอามาจาก Example)
     local function filledcheck(Position)
         local Parts = workspace:FindPartsInRegion3(Region3.new(Position, Position), nil, 50)
         for _, v in ipairs(Parts) do
@@ -368,7 +313,7 @@ do
         ["Sand"] = {"Cactus"}
     }
 
-    -- แผนที่แปลงชื่อใน UI ไปเป็นชื่อบล็อกจริงๆ ภายในเกม (ไม่ต้องมีวงเล็บแล้ว)
+    -- แผนที่แปลงชื่อใน UI ไปเป็นชื่อบล็อคจริงๆ ภายในเกม (ไม่ต้องมีวงเล็บแล้ว)
     local CropInternalMap = {
         ["Wheat"] = "wheat", ["Tomato"] = "tomato", ["Potato"] = "potato",
         ["Carrot"] = "carrot", ["Spinach"] = "spinach", ["Onion"] = "onion",
@@ -391,7 +336,7 @@ do
 
     -- 2. Select Crops (เลือกพืชที่จะเก็บเกี่ยว)
     local SelectCrops = Tabs.Farming:AddDropdown("SelectCrops", {
-        Title = "Select Crops (เลือกพืชที่จะเก็บ)",
+        Title = "Select Crops (เลือพืชที่จะเ็บ)",
         Values = CropItems["Farmland"],
         Multi = false,
         Default = 1,
@@ -543,7 +488,7 @@ do
         Title = "Join Code Spoofer",
         Description = "สุ่มหรือตั้งรหัสเกาะปลอม",
         Default = "",
-        Placeholder = "กรอกโค้ด...",
+        Placeholder = "รอโค้ด...",
         Numeric = false,
         Finished = false,
         Callback = function(Value)
@@ -667,8 +612,8 @@ do
         end
     })
 
-    -- 5. ESP และ Labels
-    Tabs.Misc:AddParagraph({ Title = "Labels (ESP)", Content = "ระบบแสกนตู้กดน้ำและกล่อง" })
+    -- 5. ESP ละ Labels
+    Tabs.Misc:AddParagraph({ Title = "Labels (ESP)", Content = "ระบบสแกนตู้กดน้ำและกล่อง" })
     
     local ESPConfig = {
         VendingLabels = false,
