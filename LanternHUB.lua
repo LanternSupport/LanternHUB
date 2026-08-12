@@ -788,30 +788,58 @@ do
                                     if labelCount >= ESPConfig.MaxLabels then break end
                                     
                                     if block.Name:find("vendingMachine") and ESPConfig.VendingLabels then
-                                        if not VendingCache[block] then
-                                            local primary = block:FindFirstChild("Primary") or block:FindFirstChildWhichIsA("BasePart")
-                                            if primary then
-                                                local text = "Vending"
-                                                local selling = block:FindFirstChild("SellingContents")
-                                                if selling and #selling:GetChildren() > 0 then
-                                                    text = "Vending [" .. selling:GetChildren()[1].Name .. "]"
+                                        local primary = block:FindFirstChild("Primary") or block:FindFirstChildWhichIsA("BasePart")
+                                        if primary then
+                                            -- ดึงข้อมูลชื่อไอเทม, จำนวนของที่เหลือ, และเหรียญในตู้
+                                            local itemName = "Unknown"
+                                            local itemsCount = 0
+                                            local coins = 0
+                                            
+                                            local selling = block:FindFirstChild("SellingContents")
+                                            if selling then
+                                                local children = selling:GetChildren()
+                                                if #children > 0 then
+                                                    itemName = children[1].Name
+                                                    for _, it in ipairs(children) do
+                                                        local a = it:FindFirstChild("Amount") or it:FindFirstChild("Value")
+                                                        if a and (a:IsA("IntValue") or a:IsA("NumberValue")) then
+                                                            itemsCount = itemsCount + a.Value
+                                                        end
+                                                    end
                                                 end
-                                                VendingCache[block] = CreateESP(primary, text, Color3.fromRGB(100, 255, 100))
-                                                labelCount = labelCount + 1
                                             end
-                                        else
+                                            
+                                            local cb = block:FindFirstChild("CoinBalance")
+                                            if cb and (cb:IsA("IntValue") or cb:IsA("NumberValue")) then
+                                                coins = cb.Value
+                                            end
+                                            
+                                            -- ฟอร์แมตข้อความแบบ 2 บรรทัดตามต้องการ: "ชื่อ [จำนวนของ]\nCoins: ยอดเงิน"
+                                            local newText = itemName .. " [" .. tostring(itemsCount) .. "]\nCoins: " .. tostring(coins)
+                                            
+                                            if not VendingCache[block] then
+                                                VendingCache[block] = CreateESP(primary, newText, Color3.fromRGB(100, 255, 100))
+                                            else
+                                                -- ถ้ามีป้ายอยู่แล้ว ให้อัปเดตข้อมูลแบบเรียลไทม์
+                                                local bg = VendingCache[block]
+                                                if bg and bg:FindFirstChild("TextLabel") then
+                                                    bg.TextLabel.Text = newText
+                                                    bg.MaxDistance = ESPConfig.LabelDistance
+                                                end
+                                            end
                                             labelCount = labelCount + 1
                                         end
                                     end
                                     
                                     if (block.Name:find("chest") or block.Name:find("Chest")) and ESPConfig.ChestLabels then
-                                        if not ChestCache[block] then
-                                            local primary = block:FindFirstChild("Primary") or block:FindFirstChildWhichIsA("BasePart")
-                                            if primary then
+                                        local primary = block:FindFirstChild("Primary") or block:FindFirstChildWhichIsA("BasePart")
+                                        if primary then
+                                            if not ChestCache[block] then
                                                 ChestCache[block] = CreateESP(primary, "Chest", Color3.fromRGB(255, 150, 50))
-                                                labelCount = labelCount + 1
+                                            else
+                                                local bg = ChestCache[block]
+                                                if bg then bg.MaxDistance = ESPConfig.LabelDistance end
                                             end
-                                        else
                                             labelCount = labelCount + 1
                                         end
                                     end
