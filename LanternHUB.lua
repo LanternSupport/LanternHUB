@@ -761,7 +761,7 @@ do
         local bg = Instance.new("BillboardGui")
         bg.Name = "ESP"
         bg.Size = UDim2.new(0, 250, 0, 70)
-        bg.StudsOffset = Vector3.new(0, 4, 0)
+        bg.ExtentsOffsetWorldSpace = Vector3.new(0, 2.5, 0)
         bg.AlwaysOnTop = true
         bg.MaxDistance = ESPConfig.LabelDistance
         
@@ -871,7 +871,7 @@ do
                 local newText = itemName .. " [" .. formatNumber(itemsCount) .. "]\nCoins: " .. formatNumber(coins)
                 
                 if not VendingCache[block] then
-                    VendingCache[block] = CreateESP(data.primary, newText, Color3.fromRGB(100, 200, 255)) -- สีฟ้า
+                    VendingCache[block] = CreateESP(block, newText, Color3.fromRGB(100, 200, 255)) -- สีฟ้า
                 else
                     local bg = VendingCache[block]
                     if bg and bg:FindFirstChild("TextLabel") then
@@ -890,7 +890,7 @@ do
                 currentChestRender[block] = true
                 
                 if not ChestCache[block] then
-                    ChestCache[block] = CreateESP(data.primary, "Chest", Color3.fromRGB(255, 150, 50))
+                    ChestCache[block] = CreateESP(block, "Chest", Color3.fromRGB(255, 150, 50))
                 else
                     local bg = ChestCache[block]
                     if bg then bg.MaxDistance = ESPConfig.LabelDistance end
