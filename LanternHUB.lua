@@ -676,8 +676,8 @@ do
         IgnoreRadius = false,
         RadiusCircle = false,
         VendingRadius = 15,
-        LabelDistance = 100,
-        MaxLabels = 25
+        LabelDistance = 150,
+        MaxLabels = 50
     }
 
     Tabs.Misc:AddToggle("VendingLabelsToggle", {
@@ -692,54 +692,6 @@ do
         Description = "แสดงป้ายชื่อกล่องเก็บของทั้งหมด",
         Default = false,
         Callback = function(Value) ESPConfig.ChestLabels = Value end
-    })
-
-    Tabs.Misc:AddParagraph({ Title = "Radius & Selection", Content = "ปรับแต่งรัศมีวงกลม" })
-
-    Tabs.Misc:AddToggle("IgnoreRadiusToggle", {
-        Title = "Ignore Radius",
-        Description = "ไม่สนใจระยะรัศมี",
-        Default = false,
-        Callback = function(Value) ESPConfig.IgnoreRadius = Value end
-    })
-    
-    Tabs.Misc:AddToggle("RadiusCircleToggle", {
-        Title = "Radius Circle",
-        Description = "วาดเส้นวงกลมรอบตัว",
-        Default = false,
-        Callback = function(Value) ESPConfig.RadiusCircle = Value end
-    })
-    
-    Tabs.Misc:AddSlider("VendingRadiusSlider", {
-        Title = "Vending Radius",
-        Description = "ปรับขนาดรัศมีวงกลม",
-        Default = 15,
-        Min = 5,
-        Max = 450,
-        Rounding = 1,
-        Callback = function(Value) ESPConfig.VendingRadius = Value end
-    })
-
-    Tabs.Misc:AddParagraph({ Title = "Label Settings", Content = "ตั้งค่าป้าย ESP" })
-
-    Tabs.Misc:AddSlider("LabelDistanceSlider", {
-        Title = "Label Distance",
-        Description = "ระยะมองเห็นป้ายสูงสุด",
-        Default = 100,
-        Min = 50,
-        Max = 1000,
-        Rounding = 0,
-        Callback = function(Value) ESPConfig.LabelDistance = Value end
-    })
-
-    Tabs.Misc:AddSlider("MaxLabelsSlider", {
-        Title = "Max Labels",
-        Description = "จำนวนป้ายสูงสุดที่จะแสดง (กันแลค)",
-        Default = 25,
-        Min = 10,
-        Max = 200,
-        Rounding = 0,
-        Callback = function(Value) ESPConfig.MaxLabels = Value end
     })
 
     -- ระบบการวาด ESP และ Circle แบบรวบรัด (ประหยัดสเปคกว่า Example.txt)
@@ -867,8 +819,8 @@ do
                     coins = cb.Value
                 end
                 
-                -- ใส่ลูกน้ำให้ตัวเลข และฟอร์แมตข้อความ
-                local newText = itemName .. " [" .. formatNumber(itemsCount) .. "]\nCoins: " .. formatNumber(coins)
+                -- ฟอร์แมตข้อความแบบ 2 บรรทัดตามต้องการ: "Items : [จำนวน]\nCoins : [ยอดเงิน]"
+                local newText = "Items : " .. formatNumber(itemsCount) .. "\nCoins : " .. formatNumber(coins)
                 
                 if not VendingCache[block] then
                     VendingCache[block] = CreateESP(block, newText, Color3.fromRGB(100, 200, 255)) -- สีฟ้า
@@ -889,11 +841,33 @@ do
                 local block = data.block
                 currentChestRender[block] = true
                 
+                local itemsCount = 0
+                local contents = block:FindFirstChild("Contents")
+                if contents then
+                    local children = contents:GetChildren()
+                    for _, it in ipairs(children) do
+                        local a = it:FindFirstChild("Amount") or it:FindFirstChild("Value")
+                        if a and (a:IsA("IntValue") or a:IsA("NumberValue")) then
+                            itemsCount = itemsCount + a.Value
+                        end
+                    end
+                end
+                
+                local chestName = block.Name
+                -- กรองคำว่า "chest" ออกถ้าไม่อยากให้แสดงเต็มๆ หรือปล่อยไว้
+                
+                local newText = "Items : " .. formatNumber(itemsCount) .. "\n" .. chestName
+                
                 if not ChestCache[block] then
-                    ChestCache[block] = CreateESP(block, "Chest", Color3.fromRGB(255, 150, 50))
+                    ChestCache[block] = CreateESP(block, newText, Color3.fromRGB(255, 150, 50))
                 else
                     local bg = ChestCache[block]
-                    if bg then bg.MaxDistance = ESPConfig.LabelDistance end
+                    if bg then 
+                        if bg:FindFirstChild("TextLabel") then
+                            bg.TextLabel.Text = newText
+                        end
+                        bg.MaxDistance = ESPConfig.LabelDistance 
+                    end
                 end
                 cCount = cCount + 1
             end
