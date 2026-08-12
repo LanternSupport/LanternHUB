@@ -507,6 +507,381 @@ do
             end
         end
     end)
+
+    -------------------------------------------------------------------------
+    -- หมวดหมู่: Misc (ระบบเสริมและ ESP)
+    -------------------------------------------------------------------------
+    Tabs.Misc:AddParagraph({
+        Title = "Utilities",
+        Content = "ฟีเจอร์ช่วยเหลือจิปาถะต่างๆ"
+    })
+
+    -- 1. Anti AFK
+    local VirtualUser = game:GetService("VirtualUser")
+    local AntiAfkConnection
+    Tabs.Misc:AddToggle("AntiAfkToggle", {
+        Title = "Anti AFK",
+        Description = "ป้องกันการโดนเตะเมื่ออยู่นิ่งนานเกิน 20 นาที",
+        Default = false,
+        Callback = function(Value)
+            if Value then
+                AntiAfkConnection = Player.Idled:Connect(function()
+                    VirtualUser:CaptureController()
+                    VirtualUser:ClickButton2(Vector2.new())
+                end)
+            else
+                if AntiAfkConnection then
+                    AntiAfkConnection:Disconnect()
+                    AntiAfkConnection = nil
+                end
+            end
+        end
+    })
+
+    -- 2. Join Code Spoofer
+    Tabs.Misc:AddInput("JoinCodeInput", {
+        Title = "Join Code Spoofer",
+        Description = "สุ่มหรือตั้งรหัสเกาะปลอม",
+        Default = "",
+        Placeholder = "กรอกโค้ด...",
+        Numeric = false,
+        Finished = false,
+        Callback = function(Value)
+            if Value == "" then return end
+            local jc = Player:FindFirstChild("JoinCode")
+            if jc then jc.Value = Value end
+        end
+    })
+
+    -- 3. Invite Player
+    local InviteUsernameTarget = ""
+    Tabs.Misc:AddInput("InviteInput", {
+        Title = "Invite Player",
+        Description = "กรอกชื่อเพื่อนที่ต้องการส่งคำเชิญ",
+        Default = "",
+        Placeholder = "Username...",
+        Numeric = false,
+        Finished = false,
+        Callback = function(Value)
+            InviteUsernameTarget = Value
+        end
+    })
+    
+    Tabs.Misc:AddButton({
+        Title = "Send Invite",
+        Description = "ส่งคำเชิญให้ผู้เล่นที่ระบุ",
+        Callback = function()
+            if InviteUsernameTarget == "" then return end
+            task.spawn(function()
+                local ok, uid = pcall(function() return game:GetService("Players"):GetUserIdFromNameAsync(InviteUsernameTarget) end)
+                if ok and uid then
+                    local NET = game:GetService("ReplicatedStorage"):WaitForChild("rbxts_include"):WaitForChild("node_modules"):WaitForChild("@net"):WaitForChild("out"):WaitForChild("_NetManaged")
+                    local CLIENT_INVITE = NET:WaitForChild("client_request_8")
+                    CLIENT_INVITE:InvokeServer({userId = uid, name = InviteUsernameTarget})
+                end
+            end)
+        end
+    })
+
+    -- 4. View Inventory
+    local ViewInvTarget = ""
+    Tabs.Misc:AddInput("ViewInvInput", {
+        Title = "Target Username (View Inv)",
+        Description = "ระบุชื่อคนที่จะส่องกระเป๋า",
+        Default = "",
+        Placeholder = "Username...",
+        Numeric = false,
+        Finished = false,
+        Callback = function(Value)
+            ViewInvTarget = Value
+        end
+    })
+    
+    local MountedInventoryView = nil
+    Tabs.Misc:AddButton({
+        Title = "View Inventory",
+        Description = "ส่องกระเป๋าของคนที่ระบุ",
+        Callback = function()
+            pcall(function()
+                local RoactModule = game:GetService("ReplicatedStorage"):WaitForChild("rbxts_include"):WaitForChild("node_modules"):WaitForChild("@rbxts"):WaitForChild("roact"):WaitForChild("src")
+                local Roact = require(RoactModule)
+                local PlayerScripts = Player:WaitForChild("PlayerScripts")
+                
+                local function GetModule(PathTable)
+                    local current = PlayerScripts
+                    for _, name in ipairs(PathTable) do 
+                        current = current:WaitForChild(name, 5)
+                        if not current then return nil end 
+                    end
+                    return current
+                end
+                
+                local PeekWrapperModule = GetModule({"TS", "flame", "controllers", "moderation", "ui", "inventory-peek-wrapper"})
+                if not PeekWrapperModule then return end
+                local InventoryPeekWrapper = require(PeekWrapperModule).InventoryPeekWrapper
+                
+                local TargetPlayer = Player
+                if ViewInvTarget ~= "" then
+                    for _, p in ipairs(game:GetService("Players"):GetPlayers()) do
+                        if string.find(string.lower(p.Name), string.lower(ViewInvTarget)) or string.find(string.lower(p.DisplayName), string.lower(ViewInvTarget)) then
+                            TargetPlayer = p
+                            break
+                        end
+                    end
+                end
+                
+                local RealTools = {}
+                local backpack = TargetPlayer:FindFirstChild("Backpack")
+                if backpack then
+                    for _, tool in ipairs(backpack:GetChildren()) do
+                        local amount = 1
+                        local AmtObj = tool:FindFirstChild("Amount") or tool:FindFirstChild("Value")
+                        if AmtObj and (AmtObj:IsA("IntValue") or AmtObj:IsA("NumberValue")) then amount = AmtObj.Value end
+                        table.insert(RealTools, {name=tool.Name, amount=amount, displayName=tool.Name})
+                    end
+                end
+                if TargetPlayer.Character then
+                    local equipped = TargetPlayer.Character:FindFirstChildWhichIsA("Tool")
+                    if equipped then
+                        local amount = 1
+                        local AmtObj = equipped:FindFirstChild("Amount") or equipped:FindFirstChild("Value")
+                        if AmtObj and (AmtObj:IsA("IntValue") or AmtObj:IsA("NumberValue")) then amount = AmtObj.Value end
+                        table.insert(RealTools, {name=equipped.Name, amount=amount, displayName=equipped.Name})
+                    end
+                end
+                if #RealTools == 0 then table.insert(RealTools, {name="barrier", amount=0, displayName="No Items Found (Not Replicated)"}) end
+                
+                if MountedInventoryView then Roact.unmount(MountedInventoryView); MountedInventoryView = nil end
+                
+                local app = Roact.createElement("ScreenGui", {DisplayOrder=10000, IgnoreGuiInset=true, ResetOnSpawn=false}, {
+                    Roact.createElement(InventoryPeekWrapper, {
+                        headerText = TargetPlayer.Name,
+                        tools = RealTools,
+                        onClose = function()
+                            if MountedInventoryView then Roact.unmount(MountedInventoryView); MountedInventoryView = nil end
+                        end
+                    })
+                })
+                MountedInventoryView = Roact.mount(app, Player:WaitForChild("PlayerGui"))
+            end)
+        end
+    })
+
+    -- 5. ESP และ Labels
+    Tabs.Misc:AddParagraph({ Title = "Labels (ESP)", Content = "ระบบแสกนตู้กดน้ำและกล่อง" })
+    
+    local ESPConfig = {
+        VendingLabels = false,
+        ChestLabels = false,
+        IgnoreRadius = false,
+        RadiusCircle = false,
+        VendingRadius = 15,
+        LabelDistance = 100,
+        MaxLabels = 25
+    }
+
+    Tabs.Misc:AddToggle("VendingLabelsToggle", {
+        Title = "Vending Labels",
+        Description = "แสดงป้ายชื่อตู้กดน้ำทั้งหมด",
+        Default = false,
+        Callback = function(Value) ESPConfig.VendingLabels = Value end
+    })
+
+    Tabs.Misc:AddToggle("ChestLabelsToggle", {
+        Title = "Chest Labels",
+        Description = "แสดงป้ายชื่อกล่องเก็บของทั้งหมด",
+        Default = false,
+        Callback = function(Value) ESPConfig.ChestLabels = Value end
+    })
+
+    Tabs.Misc:AddParagraph({ Title = "Radius & Selection", Content = "ปรับแต่งรัศมีวงกลม" })
+
+    Tabs.Misc:AddToggle("IgnoreRadiusToggle", {
+        Title = "Ignore Radius",
+        Description = "ไม่สนใจระยะรัศมี",
+        Default = false,
+        Callback = function(Value) ESPConfig.IgnoreRadius = Value end
+    })
+    
+    Tabs.Misc:AddToggle("RadiusCircleToggle", {
+        Title = "Radius Circle",
+        Description = "วาดเส้นวงกลมรอบตัว",
+        Default = false,
+        Callback = function(Value) ESPConfig.RadiusCircle = Value end
+    })
+    
+    Tabs.Misc:AddSlider("VendingRadiusSlider", {
+        Title = "Vending Radius",
+        Description = "ปรับขนาดรัศมีวงกลม",
+        Default = 15,
+        Min = 5,
+        Max = 450,
+        Rounding = 1,
+        Callback = function(Value) ESPConfig.VendingRadius = Value end
+    })
+
+    Tabs.Misc:AddParagraph({ Title = "Label Settings", Content = "ตั้งค่าป้าย ESP" })
+
+    Tabs.Misc:AddSlider("LabelDistanceSlider", {
+        Title = "Label Distance",
+        Description = "ระยะมองเห็นป้ายสูงสุด",
+        Default = 100,
+        Min = 50,
+        Max = 1000,
+        Rounding = 0,
+        Callback = function(Value) ESPConfig.LabelDistance = Value end
+    })
+
+    Tabs.Misc:AddSlider("MaxLabelsSlider", {
+        Title = "Max Labels",
+        Description = "จำนวนป้ายสูงสุดที่จะแสดง (กันแลค)",
+        Default = 25,
+        Min = 10,
+        Max = 200,
+        Rounding = 0,
+        Callback = function(Value) ESPConfig.MaxLabels = Value end
+    })
+
+    -- ระบบการวาด ESP และ Circle แบบรวบรัด (ประหยัดสเปคกว่า Example.txt)
+    local ESPFolder = Instance.new("Folder")
+    ESPFolder.Name = "LanternHUB_ESP"
+    ESPFolder.Parent = game:GetService("CoreGui")
+    
+    local function CreateESP(part, text, color)
+        local bg = Instance.new("BillboardGui")
+        bg.Name = "ESP"
+        bg.Size = UDim2.new(0, 100, 0, 50)
+        bg.StudsOffset = Vector3.new(0, 3, 0)
+        bg.AlwaysOnTop = true
+        bg.MaxDistance = ESPConfig.LabelDistance
+        
+        local txt = Instance.new("TextLabel")
+        txt.Size = UDim2.new(1, 0, 1, 0)
+        txt.BackgroundTransparency = 1
+        txt.Text = text
+        txt.TextColor3 = color
+        txt.TextStrokeTransparency = 0
+        txt.Font = Enum.Font.GothamBold
+        txt.TextSize = 14
+        txt.Parent = bg
+        
+        bg.Parent = ESPFolder
+        bg.Adornee = part
+        return bg
+    end
+    
+    local VendingCache = {}
+    local ChestCache = {}
+    
+    task.spawn(function()
+        while true do
+            task.wait(1)
+            local labelCount = 0
+            if ESPConfig.VendingLabels or ESPConfig.ChestLabels then
+                local islands = workspace:FindFirstChild("Islands")
+                if islands then
+                    for _, island in ipairs(islands:GetChildren()) do
+                        if island:IsA("Model") then
+                            local blocks = island:FindFirstChild("Blocks")
+                            if blocks then
+                                for _, block in ipairs(blocks:GetChildren()) do
+                                    if labelCount >= ESPConfig.MaxLabels then break end
+                                    
+                                    if block.Name:find("vendingMachine") and ESPConfig.VendingLabels then
+                                        if not VendingCache[block] then
+                                            local primary = block:FindFirstChild("Primary") or block:FindFirstChildWhichIsA("BasePart")
+                                            if primary then
+                                                local text = "Vending"
+                                                local selling = block:FindFirstChild("SellingContents")
+                                                if selling and #selling:GetChildren() > 0 then
+                                                    text = "Vending [" .. selling:GetChildren()[1].Name .. "]"
+                                                end
+                                                VendingCache[block] = CreateESP(primary, text, Color3.fromRGB(100, 255, 100))
+                                                labelCount = labelCount + 1
+                                            end
+                                        else
+                                            labelCount = labelCount + 1
+                                        end
+                                    end
+                                    
+                                    if (block.Name:find("chest") or block.Name:find("Chest")) and ESPConfig.ChestLabels then
+                                        if not ChestCache[block] then
+                                            local primary = block:FindFirstChild("Primary") or block:FindFirstChildWhichIsA("BasePart")
+                                            if primary then
+                                                ChestCache[block] = CreateESP(primary, "Chest", Color3.fromRGB(255, 150, 50))
+                                                labelCount = labelCount + 1
+                                            end
+                                        else
+                                            labelCount = labelCount + 1
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+            
+            for block, esp in pairs(VendingCache) do
+                if not ESPConfig.VendingLabels or not block.Parent then
+                    esp:Destroy()
+                    VendingCache[block] = nil
+                else
+                    esp.MaxDistance = ESPConfig.LabelDistance
+                end
+            end
+            for block, esp in pairs(ChestCache) do
+                if not ESPConfig.ChestLabels or not block.Parent then
+                    esp:Destroy()
+                    ChestCache[block] = nil
+                else
+                    esp.MaxDistance = ESPConfig.LabelDistance
+                end
+            end
+        end
+    end)
+    
+    local circleLines = {}
+    local numSegments = 36
+    for i = 1, numSegments do
+        local line = Drawing.new("Line")
+        line.Thickness = 2
+        line.Color = Color3.fromRGB(255, 100, 100)
+        line.Visible = false
+        table.insert(circleLines, line)
+    end
+    
+    RunService.RenderStepped:Connect(function()
+        if ESPConfig.RadiusCircle and Player.Character and Player.Character:FindFirstChild("HumanoidRootPart") then
+            local hrp = Player.Character.HumanoidRootPart
+            local radius = ESPConfig.IgnoreRadius and 10000 or ESPConfig.VendingRadius
+            local pos = hrp.Position - Vector3.new(0, 3, 0)
+            local camera = workspace.CurrentCamera
+            
+            for i = 1, numSegments do
+                local angle1 = math.rad((i - 1) * (360 / numSegments))
+                local angle2 = math.rad(i * (360 / numSegments))
+                
+                local p1 = pos + Vector3.new(math.cos(angle1) * radius, 0, math.sin(angle1) * radius)
+                local p2 = pos + Vector3.new(math.cos(angle2) * radius, 0, math.sin(angle2) * radius)
+                
+                local s1, on1 = camera:WorldToViewportPoint(p1)
+                local s2, on2 = camera:WorldToViewportPoint(p2)
+                
+                if on1 and on2 then
+                    circleLines[i].From = Vector2.new(s1.X, s1.Y)
+                    circleLines[i].To = Vector2.new(s2.X, s2.Y)
+                    circleLines[i].Visible = true
+                else
+                    circleLines[i].Visible = false
+                end
+            end
+        else
+            for i = 1, numSegments do
+                circleLines[i].Visible = false
+            end
+        end
+    end)
 end
 
 -- ตั้งค่าระบบ Addons (SaveManager & InterfaceManager)
