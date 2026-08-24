@@ -347,6 +347,7 @@ Tabs.Login:AddButton({
             Window:Destroy()
             task.wait(0.5)
             pcall(function()
+                getgenv().LanternHUB_Pass = true
                 loadstring(game:HttpGet(Main_Script_Link))()
             end)
         end
