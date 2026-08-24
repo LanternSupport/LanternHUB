@@ -1,7 +1,3 @@
-if getgenv().LanternHUB_Pass ~= true then
-    game.Players.LocalPlayer:Kick("Security Error: Please run the script through the Key System!")
-    return
-end
 
 -------------------------------------------------------------------------------
 --! json library
@@ -319,7 +315,7 @@ local Tabs = {
 local currentInputKey = ""
 
 -- 🌟 สิ่งที่คุณต้องแก้: ลิงก์สคริปต์หลักที่ Obfuscate แล้วของคุณ 🌟
-local Main_Script_Link = "https://raw.githubusercontent.com/LanternSupport/LanternHUB/main/islands.lua"
+local Main_Script_Link = "https://raw.githubusercontent.com/LanternSupport/script/refs/heads/main/islands.lua?token=GHSAT0AAAAAAEE7DB5VK2CLPWA6AJQSUSTK2ULZ5NQ"
 
 Tabs.Login:AddParagraph({
     Title = "Welcome to Lantern HUB",
