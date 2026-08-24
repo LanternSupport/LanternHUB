@@ -1,6 +1,6 @@
 # 🏮 Lantern HUB - Roblox Islands Script
 
-![Lantern HUB Showcase](https://via.placeholder.com/800x400.png?text=Lantern+HUB+Showcase+Image)
+<img width="724" height="464" alt="image" src="https://github.com/user-attachments/assets/22199d4a-20a9-4bd2-a308-1040842641df" />
 
 **Lantern HUB v1.0 (Beta)** is an advanced, highly optimized, and feature-rich script designed specifically for **Roblox Islands**. Built with the elegant Fluent UI design, it provides an all-in-one solution for farming, combat, market sniping, and world exploration.
 
