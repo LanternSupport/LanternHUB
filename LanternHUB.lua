@@ -315,7 +315,7 @@ local Tabs = {
 local currentInputKey = ""
 
 -- 🌟 สิ่งที่คุณต้องแก้: ลิงก์สคริปต์หลักที่ Obfuscate แล้วของคุณ 🌟
-local Main_Script_Link = "https://raw.githubusercontent.com/LanternSupport/script/refs/heads/main/islands.lua?token=GHSAT0AAAAAAEE7DB5VK2CLPWA6AJQSUSTK2ULZ5NQ"
+local Main_Script_Link = "https://raw.githubusercontent.com/LanternSupport/LanternHUB/main/islands.lua"
 
 Tabs.Login:AddParagraph({
     Title = "Welcome to Lantern HUB",
