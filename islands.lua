@@ -698,7 +698,7 @@ local AutoPlowToggle = Tabs.Farming:AddToggle("AutoPlowToggle", {
 local function isTargetTree(name, selected)
     if selected == "All" then return true end
     if selected == "Oak" then
-        local others = {"CherryBlossom", "Apple", "Orange", "Lemon", "Plum", "Avocado", "Coconut", "Birch", "Pine", "Maple", "Hickory", "Spirit"}
+        local others = {"CherryBlossom", "Birch", "Pine", "Maple", "Hickory", "Spirit"}
         for _, other in ipairs(others) do
             if string.find(name, other) then return false end
         end
