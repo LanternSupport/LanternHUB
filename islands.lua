@@ -10,7 +10,7 @@ local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.
 
 -- [[ 2. Create Window ]] --
 local Window = Fluent:CreateWindow({
-    Title = "Lantern HUB v1.0 (Beta)",
+    Title = "Lantern HUB v1.0.0 (Beta)",
     SubTitle = "Support by idontknow",
     TabWidth = 160,
     Size = UDim2.fromOffset(720, 460),
