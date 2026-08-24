@@ -10,7 +10,7 @@ local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.
 
 -- [[ 2. Create Window ]] --
 local Window = Fluent:CreateWindow({
-    Title = "Lantern HUB v1.0.0 (Beta)",
+    Title = "Lantern HUB v1.0 (Beta)",
     SubTitle = "Support by idontknow",
     TabWidth = 160,
     Size = UDim2.fromOffset(720, 460),
@@ -1659,7 +1659,8 @@ local function ManageFishingThread()
                         local tool = char and char:FindFirstChildWhichIsA("Tool")
                         local isHoldingRod = tool and tool.Name:lower():find("rod")
                         
-                        -- Auto Equip
+                        -- Auto Equip (DISABLED as per user request to avoid inventory bouncing)
+                        --[[
                         if not isHoldingRod then
                             local backpack = LocalPlayer:FindFirstChild("Backpack")
                             local hum = char and char:FindFirstChild("Humanoid")
@@ -1673,6 +1674,7 @@ local function ManageFishingThread()
                                 end
                             end
                         end
+                        ]]
                         
                         -- Cast if 10 seconds passed since last cast
                         if isHoldingRod and hrp and (tick() - lastCastTime > 10) then
