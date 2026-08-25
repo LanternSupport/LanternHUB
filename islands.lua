@@ -2367,168 +2367,57 @@ SaveManager:SetFolder("LanternHUB/configs")
   })
   
   Tabs.Misc:AddButton({
-      Title = "Join Island",
-      Description = "Teleports you to the specified island code.",
-      Callback = function()
-          if JoinCodeTarget ~= "" then
-              pcall(function()
-                  local net = game:GetService("ReplicatedStorage"):WaitForChild("rbxts_include"):WaitForChild("node_modules"):WaitForChild("@rbxts"):WaitForChild("net"):WaitForChild("out"):WaitForChild("_NetManaged")
-                  -- Try to invoke the standard join remote if it exists
-                  local joinRemote = net:FindFirstChild("client_request_6")
-                  if joinRemote then
-                      joinRemote:InvokeServer(JoinCodeTarget)
-                  end
-              end)
-          end
-      end
-  })
-  
-  local InviteTarget = ""
-  Tabs.Misc:AddInput("InviteInput", {
-      Title = "Invite Player",
-      Description = "Enter the username of the player you want to invite.",
-      Default = "",
-      Placeholder = "Username...",
-      Numeric = false,
-      Finished = true,
-      Callback = function(Value)
-          InviteTarget = Value
-      end
-  })
-  
-  Tabs.Misc:AddButton({
-      Title = "Send Island Invite",
-      Description = "Sends an island invitation to the specified player.",
-      Callback = function()
-          if InviteTarget ~= "" then
-              task.spawn(function()
-                  local ok, uid = pcall(function() 
-                      return game:GetService("Players"):GetUserIdFromNameAsync(InviteTarget) 
-                  end)
-                  if ok and uid then
-                      local net = game:GetService("ReplicatedStorage"):WaitForChild("rbxts_include"):WaitForChild("node_modules"):WaitForChild("@rbxts"):WaitForChild("net"):WaitForChild("out"):WaitForChild("_NetManaged")
-                      local inviteRemote = net:FindFirstChild("client_request_8")
-                      if inviteRemote then
-                          inviteRemote:InvokeServer({userId=uid, name=InviteTarget})
-                      end
-                  end
-              end)
-          end
-      end
-  })
-  
-  local ViewInvTarget = ""
-  Tabs.Misc:AddInput("ViewInvInput", {
-      Title = "Target Username",
-      Description = "Enter the username of the player to inspect.",
-      Default = "",
-      Placeholder = "Username...",
-      Numeric = false,
-      Finished = true,
-      Callback = function(Value)
-          ViewInvTarget = Value
-      end
-  })
-  
-  Tabs.Misc:AddButton({
-      Title = "Inspect Inventory",
-      Description = "Opens a UI showing the target player's current inventory.",
-      Callback = function()
-          pcall(function()
-              local RoactModule = game:GetService("ReplicatedStorage"):WaitForChild("rbxts_include"):WaitForChild("node_modules"):WaitForChild("@rbxts"):WaitForChild("roact"):WaitForChild("src")
-              local Roact = require(RoactModule)
-              local PlayerScripts = LocalPlayer:WaitForChild("PlayerScripts")
-              
-              local current = PlayerScripts
-              for _, name in ipairs({"TS", "flame", "controllers", "moderation", "ui", "inventory-peek-wrapper"}) do 
-                  current = current:WaitForChild(name, 5)
-                  if not current then return end 
-              end
-              local PeekWrapperModule = current
-              if not PeekWrapperModule then return end
-              
-              local InventoryPeekWrapper = require(PeekWrapperModule).InventoryPeekWrapper
-              local TargetPlayer = LocalPlayer
-              
-              if ViewInvTarget ~= "" then
-                  for _, p in ipairs(game:GetService("Players"):GetPlayers()) do
-                      if p.Name:lower():find(ViewInvTarget:lower()) or p.DisplayName:lower():find(ViewInvTarget:lower()) then
-                          TargetPlayer = p
-                          break
-                      end
-                  end
-              end
-              
-              local RealTools = {}
-              local backpack = TargetPlayer:FindFirstChild("Backpack")
-              if backpack then
-                  for _, tool in ipairs(backpack:GetChildren()) do
-                      local amount = 1
-                      local AmtObj = tool:FindFirstChild("Amount") or tool:FindFirstChild("Value")
-                      if AmtObj and (AmtObj:IsA("IntValue") or AmtObj:IsA("NumberValue")) then amount = AmtObj.Value end
-                      table.insert(RealTools, {name=tool.Name, amount=amount, displayName=tool.Name})
-                  end
-              end
-              
-              if TargetPlayer.Character then
-                  local equipped = TargetPlayer.Character:FindFirstChildWhichIsA("Tool")
-                  if equipped then
-                      local amount = 1
-                      local AmtObj = equipped:FindFirstChild("Amount") or equipped:FindFirstChild("Value")
-                      if AmtObj and (AmtObj:IsA("IntValue") or AmtObj:IsA("NumberValue")) then amount = AmtObj.Value end
-                      table.insert(RealTools, {name=equipped.Name, amount=amount, displayName=equipped.Name})
-                  end
-              end
-              
-              if #RealTools == 0 then 
-                  table.insert(RealTools, {name="barrier", amount=0, displayName="No Items Found (Not Replicated)"}) 
-              end
-              
-              if _G.MountedInventoryView then 
-                  Roact.unmount(_G.MountedInventoryView)
-                  _G.MountedInventoryView = nil 
-              end
-              
-              local app = Roact.createElement("ScreenGui", {DisplayOrder=10000, IgnoreGuiInset=true, ResetOnSpawn=false}, {
-                  Roact.createElement(InventoryPeekWrapper, {
-                      headerText = TargetPlayer.Name,
-                      tools = RealTools,
-                      onClose = function()
-                          if _G.MountedInventoryView then 
-                              Roact.unmount(_G.MountedInventoryView)
-                              _G.MountedInventoryView = nil 
-                          end
-                      end
-                  })
-              })
-              _G.MountedInventoryView = Roact.mount(app, LocalPlayer:WaitForChild("PlayerGui"))
-          end)
-      end
-  })
-  
-  Tabs.Misc:AddButton({
       Title = "Open Time Menu",
-      Description = "Opens the in-game Time Cycle menu.",
+      Description = "Automatically finds and opens the Time Cycle menu.",
       Callback = function()
           pcall(function()
               local path1 = game:GetService("Players").LocalPlayer.PlayerGui:FindFirstChild("LeftSidebar")
               if path1 then
-                  local btn = path1:FindFirstChild("1") and path1["1"]:FindFirstChild("6") and path1["1"]["6"]:FindFirstChild("5")
-                  if not btn then return end
-                  
-                  if firesignal then
-                      pcall(function() firesignal(btn.MouseButton1Click) end)
-                      pcall(function() firesignal(btn.Activated) end)
-                  elseif getconnections then
-                      for _, conn in ipairs(getconnections(btn.MouseButton1Click)) do conn:Function() end
-                      for _, conn in ipairs(getconnections(btn.Activated)) do conn:Function() end
+                  local container = path1:FindFirstChild("1") and path1["1"]:FindFirstChild("6")
+                  if container then
+                      -- สแกนหาปุ่มที่อยู่ล่างสุด (ตัวเลขสูงสุด)
+                      local maxNum = -1
+                      local target = nil
+                      for _, child in ipairs(container:GetChildren()) do
+                          local num = tonumber(child.Name)
+                          if num and num > maxNum then
+                              maxNum = num
+                              target = child
+                          end
+                      end
+                      
+                      if target then
+                          local btn
+                          if target:IsA("GuiButton") then
+                              btn = target
+                          else
+                              for _, v in ipairs(target:GetDescendants()) do
+                                  if v:IsA("GuiButton") then btn = v break end
+                              end
+                          end
+                          
+                          if btn then
+                              if firesignal then
+                                  pcall(function() firesignal(btn.MouseButton1Click) end)
+                                  pcall(function() firesignal(btn.Activated) end)
+                              elseif getconnections then
+                                  for _, conn in ipairs(getconnections(btn.MouseButton1Click)) do conn:Function() end
+                                  for _, conn in ipairs(getconnections(btn.Activated)) do conn:Function() end
+                              end
+                          end
+                      end
                   end
               end
               
-              -- Also try to just Enable the UI if it's already mounted but hidden
+              -- Also try to force display if it's just hidden
               local tc = game:GetService("Players").LocalPlayer.PlayerGui:FindFirstChild("Time Cycle")
               if tc then
                   tc.Enabled = true
+                  for _, v in ipairs(tc:GetDescendants()) do
+                      if v:IsA("Frame") and not v.Visible and v.Name == "1" then
+                          pcall(function() v.Visible = true end)
+                      end
+                  end
               end
           end)
       end
