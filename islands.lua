@@ -2367,55 +2367,23 @@ SaveManager:SetFolder("LanternHUB/configs")
   })
   
   Tabs.Misc:AddButton({
-      Title = "Open Time Menu",
-      Description = "Automatically finds and opens the Time Cycle menu.",
+      Title = "Force Show Time Button",
+      Description = "Forces all hidden buttons on the left sidebar to appear.",
       Callback = function()
           pcall(function()
               local path1 = game:GetService("Players").LocalPlayer.PlayerGui:FindFirstChild("LeftSidebar")
               if path1 then
                   local container = path1:FindFirstChild("1") and path1["1"]:FindFirstChild("6")
                   if container then
-                      -- สแกนหาปุ่มที่อยู่ล่างสุด (ตัวเลขสูงสุด)
-                      local maxNum = -1
-                      local target = nil
                       for _, child in ipairs(container:GetChildren()) do
-                          local num = tonumber(child.Name)
-                          if num and num > maxNum then
-                              maxNum = num
-                              target = child
-                          end
-                      end
-                      
-                      if target then
-                          local btn
-                          if target:IsA("GuiButton") then
-                              btn = target
-                          else
-                              for _, v in ipairs(target:GetDescendants()) do
-                                  if v:IsA("GuiButton") then btn = v break end
+                          if child:IsA("GuiObject") then
+                              child.Visible = true
+                              for _, v in ipairs(child:GetDescendants()) do
+                                  if v:IsA("GuiObject") then
+                                      v.Visible = true
+                                  end
                               end
                           end
-                          
-                          if btn then
-                              if firesignal then
-                                  pcall(function() firesignal(btn.MouseButton1Click) end)
-                                  pcall(function() firesignal(btn.Activated) end)
-                              elseif getconnections then
-                                  for _, conn in ipairs(getconnections(btn.MouseButton1Click)) do conn:Function() end
-                                  for _, conn in ipairs(getconnections(btn.Activated)) do conn:Function() end
-                              end
-                          end
-                      end
-                  end
-              end
-              
-              -- Also try to force display if it's just hidden
-              local tc = game:GetService("Players").LocalPlayer.PlayerGui:FindFirstChild("Time Cycle")
-              if tc then
-                  tc.Enabled = true
-                  for _, v in ipairs(tc:GetDescendants()) do
-                      if v:IsA("Frame") and not v.Visible and v.Name == "1" then
-                          pcall(function() v.Visible = true end)
                       end
                   end
               end
